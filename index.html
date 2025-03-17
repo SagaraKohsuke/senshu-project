@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+  <style>   
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      border: 1px solid #ccc;
+    }
+    .weekday-header {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
+    }
+    .calendar-cell {
+      padding: 15px;
+      border-right: 1px solid #ccc;
+      border-bottom: 1px solid #ccc;
+      text-align: center;
+      position: relative;
+    }
+    .calendar-cell:last-child {
+      border-right: none;
+    }
+    .calendar-cell.empty-cell {
+      border-bottom: none;
+    }
+    .date-header {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      font-size: 0.8em;
+      color: #777;
+    }
+    .menu {
+      font-size: 0.9em;
+      margin-top: 5px;
+      color: #333;
+    }
+    hr {
+      margin: 8px 0;
+      border: none;
+      border-top: 1px dashed #ddd;
+    }
+    #loading-spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-left-color: #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+  <title>泉州会館 食事予約</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>  
+  <div id="app">
+    <div id="loading-spinner" style="display:none;"></div> 
+    <h1>寮の食事予約</h1>
+    <user-selector
+      :users="users"
+      @select-user="selectedUser = $event"
+    ></user-selector>
+
+    <div v-if="loading">
+      <div id="loading-spinner"></div>
+      <p>カレンダー情報を取得中…</p>
+    </div>
+
+    <calendar
+      v-if="selectedUser && calendarData.length > 0 && !loading"
+      :calendar-data="calendarData"
+      :reservations="reservations"
+      :menus="menus"
+      @update-reservation="handleReservationChange"
+    ></calendar>
+
+    <p v-else-if="selectedUser && !loading">データがありません</p>
+    <p v-else-if="!loading">ユーザーを選択してください</p>
+  </div>
+
+  <script>
+    const { createApp, ref, onMounted, watch, computed } = Vue
+
+    const UserSelector = {
+      props: ['users'],
+      emits: ['select-user'],
+      template: `
+        <select @change="$emit('select-user', $event.target.value)">
+          <option value="">ユーザーを選択してください</option>
+          <option v-for="user in users" :key="user.id" :value="user.id">
+            {{ user.userid + user.name }}
+          </option>
+        </select>
+      `
+    }
+
+    const Calendar = {
+      props: ['calendarData', 'reservations', 'menus'],
+      emits: ['update-reservation'],
+      setup(props, { emit }) {
+        const grouped = computed(() => {
+          const groupedData = {};
+          props.calendarData.forEach(entry => {
+            if (!groupedData[entry.date]) {
+              groupedData[entry.date] = [];
+            }
+            groupedData[entry.date].push(entry);
+          });
+          return groupedData;
+        });
+
+        const dates = computed(() => Object.keys(grouped.value).sort());
+        const weekdays = ["月", "火", "水", "木", "金", "土", "日"];
+        const firstDateObj = computed(() => dates.value.length > 0 ? new Date(dates.value[0]) : null);
+        const offset = computed(() => firstDateObj.value ? ((firstDateObj.value.getDay() + 6) % 7) : 0);
+
+
+        const handleCheckboxChange = (calendarId, mealType, isReserved) => {
+          emit('update-reservation', { calendarId, mealType, isReserved });
+        };
+
+        const getReservationStatus = (calendarId, mealType) => {
+          const entryIdPrefix = mealType === 'breakfast' ? 'CAL-' : 'CAL-'; // CAL- 接頭辞は共通と仮定
+          const fullCalendarId = entryIdPrefix + calendarId; // 完全な calendarId を生成
+          const reservation = props.reservations.find(r => r.calendar_id === fullCalendarId);
+          return reservation ? reservation.is_reserved : false;
+        };
+
+
+        const getMenuName = (menuId) => {
+          const menu = props.menus.find(m => m.id === menuId);
+          return menu ? menu.name : "メニュー未設定";
+        };
+
+
+        return {
+          grouped,
+          dates,
+          weekdays,
+          offset,
+          handleCheckboxChange,
+          getReservationStatus,
+          getMenuName
+        }
+      },
+      template: `
+        <div>
+          <div class="calendar" style="font-weight: bold;">
+            <div v-for="(day, index) in weekdays" :key="index" class="weekday-header">{{ day }}</div>
+          </div>
+          <div class="calendar" style="margin-top: 10px;">
+            <div v-for="i in offset" :key="'empty-' + i" class="calendar-cell empty-cell"></div>
+            <div v-for="date in dates" :key="date" class="calendar-cell">
+              <div class="date-header">{{ date }}</div>
+
+              <div>
+                <strong>朝食:</strong>
+                <span v-if="new Date(date).getDay() === 0">予約不可</span>
+                <label v-else>
+                  <input
+                    type="checkbox"
+                    :checked="getReservationStatus(grouped[date].find(e => e.menu_id.startsWith('B'))?.id, 'breakfast')"
+                    @change="handleCheckboxChange(grouped[date].find(e => e.menu_id.startsWith('B'))?.id, 'breakfast', $event.target.checked)"
+                  />
+                  予約{{ getReservationStatus(grouped[date].find(e => e.menu_id.startsWith('B'))?.id, 'breakfast') ? '済み' : 'する' }}
+                </label>
+              </div>
+              <div class="menu">
+                {{ getMenuName(grouped[date].find(e => e.menu_id.startsWith('B'))?.menu_id) }}
+              </div>
+              <hr />
+              <div>
+                <strong>夕食:</strong>
+                <span v-if="new Date(date).getDay() === 6 || new Date(date).getDay() === 0">予約不可</span>
+                <label v-else>
+                  <input
+                    type="checkbox"
+                    :checked="getReservationStatus(grouped[date].find(e => e.menu_id.startsWith('D'))?.id, 'dinner')"
+                    @change="handleCheckboxChange(grouped[date].find(e => e.menu_id.startsWith('D'))?.id, 'dinner', $event.target.checked)"
+                  />
+                  予約{{ getReservationStatus(grouped[date].find(e => e.menu_id.startsWith('D'))?.id, 'dinner') ? '済み' : 'する' }}
+                </label>
+              </div>
+              <div class="menu">
+                {{ getMenuName(grouped[date].find(e => e.menu_id.startsWith('D'))?.menu_id) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    }
+
+
+    const app = createApp({
+      components: {
+        UserSelector,
+        Calendar
+      },
+      setup() {
+        const users = ref([]);
+        const selectedUser = ref('');
+        const calendarData = ref([]);
+        const reservations = ref([]);
+        const menus = ref([]);
+        const loading = ref(false);
+
+        const handleReservationChange = ({ calendarId, mealType, isReserved }) => {
+          const loadingSpinner = document.getElementById('loading-spinner');
+          loadingSpinner.style.display = 'block';
+
+          google.script.run
+            .withSuccessHandler(() => {
+              console.log('予約状況を更新しました');
+              loadingSpinner.style.display = 'none';
+            })
+            .withFailureHandler((error) => {
+              console.error("予約更新エラー:", error);
+              loadingSpinner.style.display = 'none';
+              alert('予約の更新に失敗しました: ' + error.message);
+            })
+            .updateReservation(selectedUser.value, calendarId, mealType, isReserved);
+        };
+
+
+        onMounted(() => {
+          loading.value = true;
+          document.getElementById('loading-spinner').style.display = 'block';
+          console.log('hogehoge')
+          google.script.run
+            .withSuccessHandler(initialData => {
+              users.value = initialData.users;
+              menus.value = initialData.menus;
+              loading.value = false;
+              document.getElementById('loading-spinner').style.display = 'none';
+            })
+            .withFailureHandler(error => {
+              console.error("初期データ取得エラー:", error);
+              loading.value = false;
+              document.getElementById('loading-spinner').style.display = 'none';
+              alert('初期データの取得に失敗しました: ' + error.message);
+            })
+            .getInitialData(); 
+            console.log('fugafuga')
+            console.log(initialData)           
+        });
+
+
+        watch(selectedUser, (newValue) => {
+          if (newValue) {
+            loading.value = true;
+            document.getElementById('loading-spinner').style.display = 'block';
+            google.script.run
+              .withSuccessHandler(data => {
+                calendarData.value = data.calendar;
+                reservations.value = data.reservations;
+                loading.value = false;
+                document.getElementById('loading-spinner').style.display = 'none';
+              })
+              .withFailureHandler(error => {
+                console.error("カレンダーデータ取得エラー:", error);
+                loading.value = false;
+                document.getElementById('loading-spinner').style.display = 'none';
+                alert('カレンダー情報の取得に失敗しました: ' + error.message);
+              })
+              .getCalendarData(newValue);
+          } else {
+            calendarData.value = [];
+            reservations.value = [];
+          }
+        });
+
+
+        return {
+          users,
+          selectedUser,
+          calendarData,
+          reservations,
+          menus,
+          loading,
+          handleReservationChange
+        }
+      }
+    })
+
+    app.mount('#app')
+  </script>
+</body>
+</html>
