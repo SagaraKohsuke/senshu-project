@@ -233,7 +233,7 @@ function updateReservation(
   const yyyyMM = `${year}${month.toString().padStart(2, "0")}`;
   const prefix = mealType === "breakfast" ? "b" : "d";
   const calendarSheetName = `${prefix}_calendar_${yyyyMM}`;
-  const reservationSheetName = `${prefix}_reservation_${yyyyMM}`;
+  const reservationSheetName = `${prefix}_reservations_${yyyyMM}`;
 
   const reservationSheet = ss.getSheetByName(reservationSheetName);
   if (!reservationSheet) {
@@ -478,7 +478,17 @@ function createAllUsersReservations(year, month) {
   };
 }
 
-function bulkUpdateReservations(userId, mealType, isReserved, year, month) {
+/**
+ * 特定のカレンダーIDのみを一括で更新する
+ * @param {string} userId - ユーザーID
+ * @param {string} mealType - 食事タイプ ('breakfast' または 'dinner')
+ * @param {boolean} isReserved - 設定する予約状態
+ * @param {number} year - 年
+ * @param {number} month - 月
+ * @param {Array} calendarIds - 更新するカレンダーIDの配列
+ * @return {Object} 処理結果
+ */
+function bulkUpdateReservationsWithIds(userId, mealType, isReserved, year, month, calendarIds) {
   const spreadsheetId = "17XAfgiRV7GqcVqrT_geEeKFQ8oKbdFMaOfWN0YM_9uk";
   const ss = SpreadsheetApp.openById(spreadsheetId);
   
@@ -501,10 +511,11 @@ function bulkUpdateReservations(userId, mealType, isReserved, year, month) {
   const headers = reservationData[0];
   
   // カラムインデックスを取得
+  const calendarIdIndex = headers.indexOf(`${prefix}_calendar_id`);
   const userIdIndex = headers.indexOf("user_id");
   const isReservedIndex = headers.indexOf("is_reserved");
   
-  if (userIdIndex === -1 || isReservedIndex === -1) {
+  if (calendarIdIndex === -1 || userIdIndex === -1 || isReservedIndex === -1) {
     return {
       success: false,
       message: "必要なカラムが予約シートに見つかりません。"
@@ -515,22 +526,22 @@ function bulkUpdateReservations(userId, mealType, isReserved, year, month) {
   const rowsToUpdate = [];
   for (let i = 1; i < reservationData.length; i++) {
     const row = reservationData[i];
-    if (row[userIdIndex] == userId) {
+    // 該当ユーザーかつ指定されたカレンダーIDのみを対象にする
+    if (row[userIdIndex] == userId && calendarIds.includes(row[calendarIdIndex])) {
       rowsToUpdate.push(i + 1); // スプレッドシートの行番号は1始まり、ヘッダー行があるので+1
     }
   }
   
   // 一括で更新
-  if (rowsToUpdate.length > 0) {
-    const updateRange = reservationSheet.getRange(rowsToUpdate[0], isReservedIndex + 1, rowsToUpdate.length, 1);
-    const updateValues = Array(rowsToUpdate.length).fill([isReserved]);
-    updateRange.setValues(updateValues);
+  let updatedCount = 0;
+  for (const rowIndex of rowsToUpdate) {
+    reservationSheet.getRange(rowIndex, isReservedIndex + 1).setValue(isReserved);
+    updatedCount++;
   }
   
   return {
     success: true,
-    message: `${rowsToUpdate.length}件の${mealType === "breakfast" ? "朝食" : "夕食"}予約を一括更新しました。`,
-    updatedCount: rowsToUpdate.length
+    message: `${updatedCount}件の${mealType === "breakfast" ? "朝食" : "夕食"}予約を一括更新しました。`,
+    updatedCount: updatedCount
   };
 }
-
