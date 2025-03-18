@@ -1,4 +1,3 @@
-# senshu-project
 # 朝夕食予約システム
 
 Google SpreadsheetとGoogle Apps Script (GAS)を使用した朝夕食予約管理Webアプリケーションです。ユーザーは自分の朝食と夕食の予約状況をカレンダー形式で確認・変更することができます。
