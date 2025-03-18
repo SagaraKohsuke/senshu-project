@@ -1,0 +1,5 @@
+function trigger(){
+  
+  createCalendarSheetsForYearMonth()
+  createAllUsersReservations()
+}
