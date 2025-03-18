@@ -1,7 +1,6 @@
 function getUsers() {
   const usersSheet = ss.getSheetByName("users");
-
-  // データ範囲を一度に取得（行ごとの個別取得を避ける）
+  
   const dataRange = usersSheet.getDataRange();
   const values = dataRange.getValues();
 

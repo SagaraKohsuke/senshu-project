@@ -5,15 +5,15 @@ function getUserReservationCalendar(userId, year, month) {
   const yyyyMM = `${year}${month.toString().padStart(2, "0")}`;
   const bCalendarSheetName = `b_calendar_${yyyyMM}`;
   const dCalendarSheetName = `d_calendar_${yyyyMM}`;
-  const bReservationSheetName = `b_reservation_${yyyyMM}`;
-  const dReservationSheetName = `d_reservation_${yyyyMM}`;
+  const bReservationSheetName = `b_reservations_${yyyyMM}`;
+  const dReservationSheetName = `d_reservations_${yyyyMM}`;
 
   const bCalendarSheet = ss.getSheetByName(bCalendarSheetName);
   const dCalendarSheet = ss.getSheetByName(dCalendarSheetName);
   const bReservationSheet = ss.getSheetByName(bReservationSheetName);
   const dReservationSheet = ss.getSheetByName(dReservationSheetName);
-  const bMenuSheet = ss.getSheetByName("b_menu");
-  const dMenuSheet = ss.getSheetByName("d_menu");
+  const bMenuSheet = ss.getSheetByName("b_menus");
+  const dMenuSheet = ss.getSheetByName("d_menus");
 
   if (
     !bCalendarSheet ||
@@ -282,16 +282,14 @@ function updateReservation(
   };
 }
 
-function createAllUsersReservations(year, month) {
-  const spreadsheetId = "17XAfgiRV7GqcVqrT_geEeKFQ8oKbdFMaOfWN0YM_9uk";
-  const ss = SpreadsheetApp.openById(spreadsheetId);
+function createAllUsersReservations(year, month) { 
 
   // シート名を生成
   const yyyyMM = `${year}${month.toString().padStart(2, "0")}`;
   const bCalendarSheetName = `b_calendar_${yyyyMM}`;
   const dCalendarSheetName = `d_calendar_${yyyyMM}`;
-  const bReservationSheetName = `b_reservation_${yyyyMM}`;
-  const dReservationSheetName = `d_reservation_${yyyyMM}`;
+  const bReservationSheetName = `b_reservations_${yyyyMM}`;
+  const dReservationSheetName = `d_reservations_${yyyyMM}`;
 
   // カレンダーシートの存在確認
   const bCalendarSheet = ss.getSheetByName(bCalendarSheetName);
@@ -479,3 +477,60 @@ function createAllUsersReservations(year, month) {
     dRowsAdded: dRowsAdded,
   };
 }
+
+function bulkUpdateReservations(userId, mealType, isReserved, year, month) {
+  const spreadsheetId = "17XAfgiRV7GqcVqrT_geEeKFQ8oKbdFMaOfWN0YM_9uk";
+  const ss = SpreadsheetApp.openById(spreadsheetId);
+  
+  // シート名を生成
+  const yyyyMM = `${year}${month.toString().padStart(2, "0")}`;
+  const prefix = mealType === "breakfast" ? "b" : "d";
+  const reservationSheetName = `${prefix}_reservations_${yyyyMM}`;
+  
+  // シートの存在確認
+  const reservationSheet = ss.getSheetByName(reservationSheetName);
+  if (!reservationSheet) {
+    return {
+      success: false,
+      message: `予約シート ${reservationSheetName} が見つかりません。`
+    };
+  }
+  
+  // 予約データを取得
+  const reservationData = reservationSheet.getDataRange().getValues();
+  const headers = reservationData[0];
+  
+  // カラムインデックスを取得
+  const userIdIndex = headers.indexOf("user_id");
+  const isReservedIndex = headers.indexOf("is_reserved");
+  
+  if (userIdIndex === -1 || isReservedIndex === -1) {
+    return {
+      success: false,
+      message: "必要なカラムが予約シートに見つかりません。"
+    };
+  }
+  
+  // 更新対象の行を収集
+  const rowsToUpdate = [];
+  for (let i = 1; i < reservationData.length; i++) {
+    const row = reservationData[i];
+    if (row[userIdIndex] == userId) {
+      rowsToUpdate.push(i + 1); // スプレッドシートの行番号は1始まり、ヘッダー行があるので+1
+    }
+  }
+  
+  // 一括で更新
+  if (rowsToUpdate.length > 0) {
+    const updateRange = reservationSheet.getRange(rowsToUpdate[0], isReservedIndex + 1, rowsToUpdate.length, 1);
+    const updateValues = Array(rowsToUpdate.length).fill([isReserved]);
+    updateRange.setValues(updateValues);
+  }
+  
+  return {
+    success: true,
+    message: `${rowsToUpdate.length}件の${mealType === "breakfast" ? "朝食" : "夕食"}予約を一括更新しました。`,
+    updatedCount: rowsToUpdate.length
+  };
+}
+

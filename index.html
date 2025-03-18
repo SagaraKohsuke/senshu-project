@@ -130,6 +130,40 @@
       .calendar-container {
         margin-top: 20px;
       }
+      
+      /* 一括予約ボタン用スタイル */
+      .bulk-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 10px;
+      }
+      .bulk-btn {
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .bulk-btn.secondary {
+        background-color: #f1f1f1;
+        color: #333;
+        border: 1px solid #ddd;
+      }
+      /* モバイル対応 */
+      @media (max-width: 600px) {
+        .month-navigation {
+          flex-direction: column;
+          gap: 10px;
+        }
+        .bulk-actions {
+          margin: 10px 0;
+        }
+      }
     </style>
   </head>
   <body>    
@@ -157,7 +191,15 @@
           <!-- 月選択ナビゲーション -->
           <div class="month-navigation">
             <button @click="prevMonth">&laquo; 前月</button>
-            <h3>{{ currentYear }}年 {{ currentMonth }}月</h3>
+            <div>
+              <h3>{{ currentYear }}年 {{ currentMonth }}月</h3>
+              <div class="bulk-actions">
+                <button @click="bulkUpdateReservations('breakfast', true)" class="bulk-btn">朝食全て予約</button>
+                <button @click="bulkUpdateReservations('breakfast', false)" class="bulk-btn secondary">朝食全て解除</button>
+                <button @click="bulkUpdateReservations('dinner', true)" class="bulk-btn">夕食全て予約</button>
+                <button @click="bulkUpdateReservations('dinner', false)" class="bulk-btn secondary">夕食全て解除</button>
+              </div>
+            </div>
             <button @click="nextMonth">次月 &raquo;</button>
           </div>
           
@@ -193,7 +235,7 @@
                   <div v-else class="meal-item">
                     <div class="meal-title">
                       <strong>朝食</strong>
-                      <span class="unavailable">データなし</span>
+                      <span class="unavailable">✗</span>
                     </div>
                   </div>
                   
@@ -217,13 +259,13 @@
                   <div v-else-if="isSaturday(date)" class="meal-item">
                     <div class="meal-title">
                       <strong>夕食</strong>
-                      <span class="unavailable">予約不可</span>
+                      <span class="unavailable">✗</span>
                     </div>
                   </div>
                   <div v-else class="meal-item">
                     <div class="meal-title">
                       <strong>夕食</strong>
-                      <span class="unavailable">データなし</span>
+                      <span class="unavailable">✗</span>
                     </div>
                   </div>
                 </div>
@@ -372,7 +414,59 @@
             return date.getDay() === 0; // 0は日曜日
           },
           
-         handleCheckboxChange: function(calendarId, mealType, isChecked) {
+          // 一括予約処理メソッド
+          bulkUpdateReservations: function(mealType, isReserved) {
+            if (!this.selectedUserId) {
+              alert('ユーザーを選択してください');
+              return;
+            }
+            
+            const actionType = isReserved ? '予約' : '解除';
+            const mealName = mealType === 'breakfast' ? '朝食' : '夕食';
+            
+            if (!confirm(`${this.currentYear}年${this.currentMonth}月の${mealName}をすべて${actionType}しますか？`)) {
+              return; // キャンセルされた場合
+            }
+            
+            this.calendarLoading = true;
+            
+            google.script.run
+              .withSuccessHandler(response => {
+                this.handleBulkUpdateSuccess(response, mealType, isReserved);
+              })
+              .withFailureHandler(this.handleError)
+              .bulkUpdateReservations(
+                this.selectedUserId,
+                mealType,
+                isReserved,
+                this.currentYear,
+                this.currentMonth
+              );
+          },
+          
+          // 一括更新成功時の処理
+          handleBulkUpdateSuccess: function(response, mealType, isReserved) {
+            if (response.success) {
+              alert(`${response.message}`);
+              
+              // ローカルデータを更新（カレンダーの再読み込みを避けるため）
+              const targetGroup = mealType === 'breakfast' ? this.groupedBreakfast : this.groupedDinner;
+              
+              // 各日付の予約状態を更新
+              for (const date in targetGroup) {
+                targetGroup[date].is_reserved = isReserved;
+              }
+              
+              this.calendarLoading = false;
+            } else {
+              alert('処理に失敗しました: ' + response.message);
+              // エラーの場合は最新データを再取得
+              this.loadCalendarData();
+            }
+          },
+          
+          // チェックボックス変更時の処理
+          handleCheckboxChange: function(calendarId, mealType, isChecked) {
             console.log(`${mealType} for calendar ID ${calendarId} changed to ${isChecked}`);
                         
             google.script.run
