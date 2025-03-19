@@ -1,10 +1,10 @@
 # 朝夕食予約システム
 
-Google SpreadsheetとGoogle Apps Script (GAS)を使用した朝夕食予約管理Webアプリケーションです。ユーザーは自分の朝食と夕食の予約状況をカレンダー形式で確認・変更することができます。
+Google Spreadsheet と Google Apps Script (GAS)を使用した朝夕食予約管理 Web アプリケーションです。ユーザーは自分の朝食と夕食の予約状況をカレンダー形式で確認・変更することができます。
 
 ## 機能概要
 
-- ユーザー認証（ユーザーID選択方式）
+- ユーザー認証（ユーザー ID 選択方式）
 - 月単位のカレンダー表示
 - 朝食・夕食の予約状況表示
 - チェックボックスによる予約の追加・削除
@@ -18,37 +18,43 @@ Google SpreadsheetとGoogle Apps Script (GAS)を使用した朝夕食予約管�
 以下のシートで構成されています：
 
 1. **users**: ユーザー情報
-   - user_id: ユーザーID（部屋番号）
+
+   - user_id: ユーザー ID（部屋番号）
    - name: ユーザー名
 
 2. **b_calendar_YYYYMM**: 朝食カレンダー（年月ごと）
-   - b_calendar_id: カレンダーID
+
+   - b_calendar_id: カレンダー ID
    - date: 日付
-   - b_menu_id: 朝食メニューID
+   - b_menu_id: 朝食メニュー ID
 
 3. **d_calendar_YYYYMM**: 夕食カレンダー（年月ごと）
-   - d_calendar_id: カレンダーID
+
+   - d_calendar_id: カレンダー ID
    - date: 日付
-   - d_menu_id: 夕食メニューID
+   - d_menu_id: 夕食メニュー ID
 
 4. **b_menu**: 朝食メニューマスタ
-   - b_menu_id: 朝食メニューID
+
+   - b_menu_id: 朝食メニュー ID
    - breakfast_menu: 朝食メニュー名
 
 5. **d_menu**: 夕食メニューマスタ
-   - d_menu_id: 夕食メニューID
+
+   - d_menu_id: 夕食メニュー ID
    - dinner_menu: 夕食メニュー名
 
-6. **b_YYYYMMreservation**: 朝食予約情報（年月ごと）
-   - b_reservation_id: 予約ID
-   - b_calendar_id: 朝食カレンダーID
-   - user_id: ユーザーID
+6. **b_reservations_YYYMM**: 朝食予約情報（年月ごと）
+
+   - b_reservation_id: 予約 ID
+   - b_calendar_id: 朝食カレンダー ID
+   - user_id: ユーザー ID
    - is_reserved: 予約状態（true/false）
 
-7. **d_YYYYMMreservation**: 夕食予約情報（年月ごと）
-   - d_reservation_id: 予約ID
-   - d_calendar_id: 夕食カレンダーID
-   - user_id: ユーザーID
+7. **d_reservations_YYYYMM**: 夕食予約情報（年月ごと）
+   - d_reservation_id: 予約 ID
+   - d_calendar_id: 夕食カレンダー ID
+   - user_id: ユーザー ID
    - is_reserved: 予約状態（true/false）
 
 ### バックエンド (Google Apps Script)
@@ -62,9 +68,11 @@ Google SpreadsheetとGoogle Apps Script (GAS)を使用した朝夕食予約管�
 ### フロントエンド (HTML/CSS/JavaScript with Vue.js)
 
 1. **ユーザー選択画面**:
+
    - ドロップダウンリストからユーザー（部屋番号）を選択
 
 2. **カレンダー表示**:
+
    - 月間カレンダー形式で朝食と夕食の予約状況を表示
    - 各日付のセルに朝食と夕食の情報を表示
    - チェックボックスで予約状態を切り替え
@@ -84,18 +92,18 @@ Google SpreadsheetとGoogle Apps Script (GAS)を使用した朝夕食予約管�
 
 - **Google Spreadsheet**: データベースとして使用
 - **Google Apps Script (GAS)**: サーバーサイドスクリプト
-- **HTML/CSS**: UIの構築
+- **HTML/CSS**: UI の構築
 - **Vue.js**: フロントエンドフレームワーク
 - **JavaScript**: クライアントサイド処理
 
 ## セットアップ
 
-1. Google Spreadsheetを作成
+1. Google Spreadsheet を作成
 2. 必要なシート（users, b_menu, d_menu）を作成し、初期データを入力
 3. Google Apps Script エディタを開き、スクリプトファイルを作成
-4. 提供されたGASコードをスクリプトに貼り付け
-5. HTMLファイルを作成し、提供されたHTMLコードを貼り付け
-6. Webアプリケーションとして公開
+4. 提供された GAS コードをスクリプトに貼り付け
+5. HTML ファイルを作成し、提供された HTML コードを貼り付け
+6. Web アプリケーションとして公開
 
 ## 使用方法
 
@@ -107,6 +115,6 @@ Google SpreadsheetとGoogle Apps Script (GAS)を使用した朝夕食予約管�
 
 ## 注意点
 
-- メニューが「未設定」と表示される場合は、メニューマスターのデータが未入力か、カレンダーテーブルのメニューIDとの紐付けが正しくない可能性があります
+- メニューが「未設定」と表示される場合は、メニューマスターのデータが未入力か、カレンダーテーブルのメニュー ID との紐付けが正しくない可能性があります
 - 日曜日はカレンダーに表示されますが、カレンダーテーブルに日曜日のデータがない場合は「データなし」と表示されます
 - 土曜日の夕食は予約できません
