@@ -10,25 +10,31 @@
       body {
         font-family: 'Helvetica Neue', Arial, sans-serif;
         margin: 0;
-        padding: 20px;
+        padding: 10px;
         background-color: #f5f5f5;
+        min-height: 100vh;
+        box-sizing: border-box;
       }
       .container {
-        max-width: 800px;
+        max-width: 1200px;
         margin: 0 auto;
         background-color: white;
-        padding: 20px;
+        padding: 15px;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-sizing: border-box;
       }
       h1 {
         color: #333;
         margin-top: 0;
+        font-size: 1.8rem;
+        text-align: center;
       }
       h2.month-header {
         color: #2c3e50;
         text-align: center;
         margin: 20px 0 15px;
+        font-size: 1.4rem;
       }
       .form-group {
         margin-bottom: 15px;
@@ -37,14 +43,16 @@
         display: block;
         margin-bottom: 5px;
         font-weight: bold;
+        font-size: 0.95rem;
       }
       select {
         width: 100%;
-        padding: 8px;
+        padding: 12px;
         border: 1px solid #ddd;
         border-radius: 4px;
         background-color: white;
         font-size: 16px;
+        box-sizing: border-box;
       }
       .loading {
         display: flex;
@@ -57,22 +65,25 @@
       .calendar {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        gap: 5px;
+        gap: 2px;
         margin-bottom: 20px;
       }
       .weekday-header {
         text-align: center;
         font-weight: bold;
-        padding: 8px;
+        padding: 8px 4px;
         background-color: #f0f0f0;
         border-radius: 4px;
+        font-size: 0.9rem;
       }
       .calendar-cell {
-        min-height: 120px;
+        min-height: 100px;
         border: 1px solid #ddd;
         border-radius: 4px;
-        padding: 5px;
+        padding: 4px;
         background-color: white;
+        font-size: 0.8rem;
+        overflow: hidden;
       }
       .empty-cell {
         background-color: #f9f9f9;
@@ -81,35 +92,40 @@
         font-weight: bold;
         text-align: right;
         border-bottom: 1px solid #eee;
-        padding-bottom: 3px;
-        margin-bottom: 5px;
-      }
-      .meal-section {
+        padding-bottom: 2px;
+        margin-bottom: 4px;
         font-size: 0.85rem;
       }
+      .meal-section {
+        font-size: 0.75rem;
+      }
       .meal-item {
-        margin-bottom: 5px;
+        margin-bottom: 4px;
       }
       .meal-title {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 3px;
+        margin-bottom: 2px;
+        flex-wrap: wrap;
       }
       .meal-checkbox {
         margin: 0;
+        font-size: 0.7rem;
       }
       .menu {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         color: #555;
-        padding-left: 5px;
+        padding-left: 2px;
+        word-wrap: break-word;
+        line-height: 1.2;
       }
       .unavailable {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         color: #999;
       }
       hr {
-        margin: 8px 0;
+        margin: 4px 0;
         border: none;
         border-top: 1px dotted #ddd;
       }
@@ -118,14 +134,21 @@
         justify-content: space-between;
         align-items: center;
         margin: 10px 0 20px;
+        flex-wrap: wrap;
+        gap: 10px;
       }
       .month-navigation button {
         background-color: #4285f4;
         color: white;
         border: none;
         border-radius: 4px;
-        padding: 5px 12px;
+        padding: 8px 15px;
         cursor: pointer;
+        font-size: 0.9rem;
+        min-width: 80px;
+      }
+      .month-navigation button:hover {
+        background-color: #3367d6;
       }
       .calendar-container {
         margin-top: 20px;
@@ -136,23 +159,30 @@
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        gap: 5px;
-        margin-top: 10px;
+        gap: 4px;
+        margin-top: 8px;
       }
       .bulk-btn {
         background-color: #4285f4;
         color: white;
         border: none;
         border-radius: 4px;
-        padding: 5px 8px;
-        font-size: 0.8rem;
+        padding: 6px 10px;
+        font-size: 0.75rem;
         cursor: pointer;
         white-space: nowrap;
+        min-width: 60px;
+      }
+      .bulk-btn:hover {
+        background-color: #3367d6;
       }
       .bulk-btn.secondary {
         background-color: #f1f1f1;
         color: #333;
         border: 1px solid #ddd;
+      }
+      .bulk-btn.secondary:hover {
+        background-color: #e1e1e1;
       }
       
       /* 締切関連のスタイル */
@@ -161,19 +191,151 @@
         cursor: not-allowed;
       }
       .deadline-notice {
-        font-size: 0.7rem;
+        font-size: 0.6rem;
         color: #d32f2f;
-        margin-left: 5px;
+        margin-left: 2px;
+      }
+      
+      /* タブレット対応 */
+      @media (max-width: 768px) {
+        .container {
+          padding: 10px;
+        }
+        h1 {
+          font-size: 1.5rem;
+        }
+        .month-navigation {
+          flex-direction: column;
+          text-align: center;
+        }
+        .month-navigation > div {
+          order: -1;
+        }
+        .bulk-actions {
+          margin: 8px 0;
+          gap: 3px;
+        }
+        .bulk-btn {
+          font-size: 0.7rem;
+          padding: 5px 8px;
+        }
+        .calendar-cell {
+          min-height: 90px;
+          padding: 3px;
+        }
+        .date-header {
+          font-size: 0.8rem;
+        }
+        .meal-section {
+          font-size: 0.7rem;
+        }
+        .menu {
+          font-size: 0.65rem;
+        }
       }
       
       /* モバイル対応 */
-      @media (max-width: 600px) {
-        .month-navigation {
-          flex-direction: column;
-          gap: 10px;
+      @media (max-width: 480px) {
+        body {
+          padding: 5px;
         }
-        .bulk-actions {
-          margin: 10px 0;
+        .container {
+          padding: 8px;
+          border-radius: 4px;
+        }
+        h1 {
+          font-size: 1.3rem;
+          margin-bottom: 15px;
+        }
+        select {
+          padding: 10px;
+          font-size: 16px; /* iOS Safari のズーム防止 */
+        }
+        .calendar {
+          gap: 1px;
+        }
+        .weekday-header {
+          padding: 6px 2px;
+          font-size: 0.8rem;
+        }
+        .calendar-cell {
+          min-height: 80px;
+          padding: 2px;
+          font-size: 0.7rem;
+        }
+        .date-header {
+          font-size: 0.75rem;
+          padding-bottom: 1px;
+          margin-bottom: 3px;
+        }
+        .meal-section {
+          font-size: 0.65rem;
+        }
+        .meal-item {
+          margin-bottom: 3px;
+        }
+        .meal-title {
+          margin-bottom: 1px;
+        }
+        .meal-checkbox {
+          font-size: 0.6rem;
+        }
+        .menu {
+          font-size: 0.6rem;
+          padding-left: 1px;
+          line-height: 1.1;
+        }
+        .unavailable {
+          font-size: 0.6rem;
+        }
+        .deadline-notice {
+          font-size: 0.55rem;
+          margin-left: 1px;
+        }
+        hr {
+          margin: 3px 0;
+        }
+        .bulk-btn {
+          font-size: 0.65rem;
+          padding: 4px 6px;
+          min-width: 50px;
+        }
+        .month-navigation button {
+          padding: 6px 12px;
+          font-size: 0.8rem;
+          min-width: 70px;
+        }
+        
+        /* 非常に小さな画面での調整 */
+        @media (max-width: 360px) {
+          .calendar-cell {
+            min-height: 70px;
+          }
+          .meal-title {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1px;
+          }
+          .meal-checkbox {
+            align-self: flex-end;
+          }
+        }
+      }
+      
+      /* 大きな画面での最適化 */
+      @media (min-width: 1200px) {
+        .calendar-cell {
+          min-height: 130px;
+          padding: 6px;
+        }
+        .meal-section {
+          font-size: 0.9rem;
+        }
+        .menu {
+          font-size: 0.8rem;
+        }
+        .date-header {
+          font-size: 0.9rem;
         }
       }
     </style>
@@ -216,8 +378,8 @@
           </div>
           
           <!-- 締切時間に関する説明 -->
-          <div style="margin: 15px 0; font-size: 0.9rem; text-align: center;">
-            <p style="margin: 5px 0;"><strong>予約締切時間</strong>: 朝食は前日17:00まで、夕食は当日10:00まで</p>
+          <div style="margin: 15px 0; font-size: 0.9rem; text-align: center; padding: 0 10px;">
+            <p style="margin: 5px 0;"><strong>予約締切時間</strong>: 翌日朝食は当日12:00まで、当日夕食は当日12:00まで</p>
           </div>
           
           <!-- カレンダー表示エリア -->
@@ -321,7 +483,10 @@
           monthDates: [],
           groupedBreakfast: {},
           groupedDinner: {},
-          menuMap: {}
+          menuMap: {},
+          
+          // 自動更新関連
+          autoUpdateInterval: null
         },
         methods: {
           // ユーザーデータ取得
@@ -435,27 +600,27 @@
             return date.getDay() === 0; // 0は日曜日
           },
           
-          // 朝食の締切時間かどうかをチェック（前日17:00まで）
+          // 翌日朝食の締切時間かどうかをチェック（当日12:00まで）
           isBreakfastDeadlinePassed: function(dateStr) {
             const now = new Date();
             const mealDate = new Date(dateStr);
             
-            // 締切日時 = 該当日の前日17:00
+            // 締切日時 = 該当日の前日12:00
             const deadline = new Date(mealDate);
             deadline.setDate(deadline.getDate() - 1);
-            deadline.setHours(17, 0, 0, 0);
+            deadline.setHours(12, 0, 0, 0);
             
             return now > deadline;
           },
           
-          // 夕食の締切時間かどうかをチェック（当日10:00まで）
+          // 当日夕食の締切時間かどうかをチェック（当日12:00まで）
           isDinnerDeadlinePassed: function(dateStr) {
             const now = new Date();
             const mealDate = new Date(dateStr);
             
-            // 締切日時 = 該当日の当日10:00
+            // 締切日時 = 該当日の当日12:00
             const deadline = new Date(mealDate);
-            deadline.setHours(10, 0, 0, 0);
+            deadline.setHours(12, 0, 0, 0);
             
             return now > deadline;
           },
@@ -590,11 +755,77 @@
               alert('予約の更新に失敗しました');             
               this.loadCalendarData();
             }
-          }
+          },
+        
+          // 自動更新の開始
+          startAutoUpdate: function() {
+            // 既存のタイマーがあれば停止
+            this.stopAutoUpdate();
+            
+            // 1分ごとに締切状況をチェック
+            this.autoUpdateInterval = setInterval(() => {
+              this.checkAndUpdateDeadlines();
+            }, 60000); // 60秒ごと
+          },
+          
+          // 自動更新の停止
+          stopAutoUpdate: function() {
+            if (this.autoUpdateInterval) {
+              clearInterval(this.autoUpdateInterval);
+              this.autoUpdateInterval = null;
+            }
+          },
+          
+          // 締切状況のチェックと更新
+          checkAndUpdateDeadlines: function() {
+            if (!this.calendarLoaded) return;
+            
+            let needsUpdate = false;
+            const now = new Date();
+            
+            // 正午を過ぎたかどうかをチェック
+            if (now.getHours() >= 12 && now.getMinutes() >= 0) {
+              // 今日の日付を取得
+              const today = new Date();
+              const todayStr = this.formatDateLocal(today);
+              
+              // 明日の日付を取得
+              const tomorrow = new Date(today);
+              tomorrow.setDate(tomorrow.getDate() + 1);
+              const tomorrowStr = this.formatDateLocal(tomorrow);
+              
+              // 今日の夕食と明日の朝食の締切状況をチェック
+              if (this.groupedDinner[todayStr] && !this.isDinnerDeadlinePassed(todayStr)) {
+                needsUpdate = true;
+              }
+              if (this.groupedBreakfast[tomorrowStr] && !this.isBreakfastDeadlinePassed(tomorrowStr)) {
+                needsUpdate = true;
+              }
+            }
+            
+            // 必要に応じて画面を更新
+            if (needsUpdate) {
+              console.log('締切時間を過ぎたため、画面を更新します');
+              this.$forceUpdate(); // Vue.jsの強制再描画
+            }
+          },
+          
+          // ローカル用の日付フォーマット関数
+          formatDateLocal: function(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, "0");
+            const day = date.getDate().toString().padStart(2, "0");
+            return `${year}-${month}-${day}`;
+          },
         },
         // コンポーネント初期化時の処理
         mounted: function() {
           this.fetchUsers();
+          this.startAutoUpdate(); // 自動更新開始
+        },
+        // コンポーネント破棄時の処理
+        beforeDestroy: function() {
+          this.stopAutoUpdate(); // 自動更新停止
         }
       });
     </script>
