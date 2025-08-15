@@ -1,6 +1,25 @@
 function getUserReservationCalendar(userId, year, month) {
   const spreadsheetId = "17XAfgiRV7GqcVqrT_geEeKFQ8oKbdFMaOfWN0YM_9uk";
-  const ss = SpreadsheetApp.openById(spreadsheetId);
+  const ss = Spre  // 夕食カレンダーマップの作成
+  const dinnerCalendar = {};
+  for (let i = 1; i < dCalendarData.length; i++) {
+    const row = dCalendarData[i];
+    const calendarId = row[dCalendarIdIndex];
+    const date = row[dCalendarDateIndex];
+    const menuId = row[dCalendarMenuIdIndex];
+    const isActive = row[dCalendarIsActiveIndex];
+
+    if (date instanceof Date) {
+      const dateStr = formatDate(date);
+      dinnerCalendar[calendarId] = {
+        id: calendarId,
+        date: dateStr,
+        menu_id: menuId,
+        menu_name: dMenuMap[menuId] || "未設定",
+        is_active: isActive
+      };
+    }
+  }d(spreadsheetId);
 
   const yyyyMM = `${year}${month.toString().padStart(2, "0")}`;
   const bCalendarSheetName = `b_calendar_${yyyyMM}`;
@@ -54,10 +73,12 @@ function getUserReservationCalendar(userId, year, month) {
   const bCalendarIdIndex = bCalendarHeaders.indexOf("b_calendar_id");
   const bCalendarDateIndex = bCalendarHeaders.indexOf("date");
   const bCalendarMenuIdIndex = bCalendarHeaders.indexOf("b_menu_id");
+  const bCalendarIsActiveIndex = bCalendarHeaders.indexOf("is_active");
 
   const dCalendarIdIndex = dCalendarHeaders.indexOf("d_calendar_id");
   const dCalendarDateIndex = dCalendarHeaders.indexOf("date");
   const dCalendarMenuIdIndex = dCalendarHeaders.indexOf("d_menu_id");
+  const dCalendarIsActiveIndex = dCalendarHeaders.indexOf("is_active");
 
   const bReservationCalendarIdIndex =
     bReservationHeaders.indexOf("b_calendar_id");
@@ -130,6 +151,7 @@ function getUserReservationCalendar(userId, year, month) {
     const calendarId = row[bCalendarIdIndex];
     const date = row[bCalendarDateIndex];
     const menuId = row[bCalendarMenuIdIndex];
+    const isActive = row[bCalendarIsActiveIndex];
 
     if (date instanceof Date) {
       const dateStr = formatDate(date);
@@ -138,6 +160,7 @@ function getUserReservationCalendar(userId, year, month) {
         date: dateStr,
         menu_id: menuId,
         menu_name: bMenuMap[menuId] || "未設定",
+        is_active: isActive
       };
     }
   }

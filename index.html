@@ -408,14 +408,15 @@
                   <div v-if="groupedBreakfast[date]" class="meal-item">
                     <div class="meal-title">
                       <strong>朝食</strong>
-                      <label class="meal-checkbox" :class="{ 'disabled': isBreakfastDeadlinePassed(date) }">
+                      <label class="meal-checkbox" :class="{ 'disabled': isBreakfastDisabled(date) }">
                         <input
                           type="checkbox"
                           :checked="groupedBreakfast[date].is_reserved"
                           @change="handleCheckboxChange(groupedBreakfast[date].id, 'breakfast', $event.target.checked)"
-                          :disabled="isBreakfastDeadlinePassed(date)"
+                          :disabled="isBreakfastDisabled(date)"
                         />
                         <span v-if="isBreakfastDeadlinePassed(date)" class="deadline-notice">締切</span>
+                        <span v-else-if="!groupedBreakfast[date].is_active" class="deadline-notice">無効</span>
                       </label>
                     </div>
                     <div class="menu">
@@ -434,14 +435,15 @@
                   <div v-if="groupedDinner[date] && !isSaturday(date)" class="meal-item">
                     <div class="meal-title">
                       <strong>夕食</strong>
-                      <label class="meal-checkbox" :class="{ 'disabled': isDinnerDeadlinePassed(date) }">
+                      <label class="meal-checkbox" :class="{ 'disabled': isDinnerDisabled(date) }">
                         <input
                           type="checkbox"
                           :checked="groupedDinner[date].is_reserved"
                           @change="handleCheckboxChange(groupedDinner[date].id, 'dinner', $event.target.checked)"
-                          :disabled="isDinnerDeadlinePassed(date)"
+                          :disabled="isDinnerDisabled(date)"
                         />
                         <span v-if="isDinnerDeadlinePassed(date)" class="deadline-notice">締切</span>
+                        <span v-else-if="!groupedDinner[date].is_active" class="deadline-notice">無効</span>
                       </label>
                     </div>
                     <div class="menu">
@@ -633,6 +635,30 @@
             return now > deadline;
           },
           
+          // 朝食が無効かどうかをチェック（締切時間またはis_active=false）
+          isBreakfastDisabled: function(dateStr) {
+            const breakfastData = this.groupedBreakfast[dateStr];
+            if (!breakfastData) return true;
+            
+            // is_activeがfalseの場合は無効
+            if (breakfastData.is_active === false) return true;
+            
+            // 締切時間を過ぎている場合も無効
+            return this.isBreakfastDeadlinePassed(dateStr);
+          },
+          
+          // 夕食が無効かどうかをチェック（締切時間またはis_active=false）
+          isDinnerDisabled: function(dateStr) {
+            const dinnerData = this.groupedDinner[dateStr];
+            if (!dinnerData) return true;
+            
+            // is_activeがfalseの場合は無効
+            if (dinnerData.is_active === false) return true;
+            
+            // 締切時間を過ぎている場合も無効
+            return this.isDinnerDeadlinePassed(dateStr);
+          },
+          
           // 一括予約処理メソッド
           bulkUpdateReservations: function(mealType, isReserved) {
             if (!this.selectedUserId) {
@@ -646,7 +672,7 @@
             // 締切をチェックして、締切済の日付があるかどうかを確認
             let hasDeadlinedDates = false;
             const targetGroup = mealType === 'breakfast' ? this.groupedBreakfast : this.groupedDinner;
-            const deadlineCheckFn = mealType === 'breakfast' ? this.isBreakfastDeadlinePassed : this.isDinnerDeadlinePassed;
+            const deadlineCheckFn = mealType === 'breakfast' ? this.isBreakfastDisabled : this.isDinnerDisabled;
             
             for (const date in targetGroup) {
               if (deadlineCheckFn(date)) {
@@ -658,7 +684,7 @@
             // 締切済の日付がある場合は警告を表示
             let confirmMessage = `${this.currentYear}年${this.currentMonth}月の${mealName}をすべて${actionType}しますか？`;
             if (hasDeadlinedDates) {
-              confirmMessage = `締切が過ぎた日付があります。締切前の日付のみ${actionType}されます。\n${confirmMessage}`;
+              confirmMessage = `締切が過ぎた日付や無効な日付があります。有効な日付のみ${actionType}されます。\n${confirmMessage}`;
             }
             
             if (!confirm(confirmMessage)) {
@@ -667,7 +693,7 @@
             
             this.calendarLoading = true;
             
-            // 締切前の日付のカレンダーIDのみを収集
+            // 有効な日付のカレンダーIDのみを収集
             const calendarIdsToUpdate = [];
             for (const date in targetGroup) {
               if (!deadlineCheckFn(date)) {
@@ -675,9 +701,9 @@
               }
             }
             
-            // 締切前の日付が一つもない場合
+            // 有効な日付が一つもない場合
             if (calendarIdsToUpdate.length === 0) {
-              alert('更新可能な日付がありません。すべての日付が締切を過ぎています。');
+              alert('更新可能な日付がありません。すべての日付が締切を過ぎているか無効です。');
               this.calendarLoading = false;
               return;
             }
@@ -704,9 +730,9 @@
               
               // ローカルデータを更新（カレンダーの再読み込みを避けるため）
               const targetGroup = mealType === 'breakfast' ? this.groupedBreakfast : this.groupedDinner;
-              const deadlineCheckFn = mealType === 'breakfast' ? this.isBreakfastDeadlinePassed : this.isDinnerDeadlinePassed;
+              const deadlineCheckFn = mealType === 'breakfast' ? this.isBreakfastDisabled : this.isDinnerDisabled;
               
-              // 締切前の日付の予約状態のみを更新
+              // 有効な日付の予約状態のみを更新
               for (const date in targetGroup) {
                 if (!deadlineCheckFn(date)) {
                   targetGroup[date].is_reserved = isReserved;
@@ -732,11 +758,16 @@
             
             if (date) {
               const isDeadlinePassed = mealType === 'breakfast' 
-                ? this.isBreakfastDeadlinePassed(date) 
-                : this.isDinnerDeadlinePassed(date);
+                ? this.isBreakfastDisabled(date) 
+                : this.isDinnerDisabled(date);
                 
               if (isDeadlinePassed) {
-                alert('締切時間を過ぎているため変更できません。');
+                const mealData = mealType === 'breakfast' ? this.groupedBreakfast[date] : this.groupedDinner[date];
+                if (mealData && mealData.is_active === false) {
+                  alert('この日付は無効のため変更できません。');
+                } else {
+                  alert('締切時間を過ぎているため変更できません。');
+                }
                 // チェックボックスの状態を元に戻す（Vue.jsが自動的に行う）
                 return;
               }
