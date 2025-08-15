@@ -478,16 +478,6 @@ function createAllUsersReservations(year, month) {
   };
 }
 
-/**
- * 特定のカレンダーIDのみを一括で更新する
- * @param {string} userId - ユーザーID
- * @param {string} mealType - 食事タイプ ('breakfast' または 'dinner')
- * @param {boolean} isReserved - 設定する予約状態
- * @param {number} year - 年
- * @param {number} month - 月
- * @param {Array} calendarIds - 更新するカレンダーIDの配列
- * @return {Object} 処理結果
- */
 function bulkUpdateReservationsWithIds(userId, mealType, isReserved, year, month, calendarIds) {
   const spreadsheetId = "17XAfgiRV7GqcVqrT_geEeKFQ8oKbdFMaOfWN0YM_9uk";
   const ss = SpreadsheetApp.openById(spreadsheetId);
