@@ -614,9 +614,8 @@
             const now = new Date();
             const mealDate = new Date(dateStr);
             
-            // 締切日時 = 該当日の前日12:00
+            // 締切日時 = 該当日の当日12:00（翌日朝食は当日12:00まで）
             const deadline = new Date(mealDate);
-            deadline.setDate(deadline.getDate() - 1);
             deadline.setHours(12, 0, 0, 0);
             
             return now > deadline;
