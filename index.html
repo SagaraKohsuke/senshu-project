@@ -468,6 +468,94 @@
         background: #545b62;
       }
 
+      /* 追加のモーダルスタイル */
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .modal-header h3 {
+        margin: 0;
+        color: #333;
+      }
+
+      .close-button {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #999;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .close-button:hover {
+        color: #333;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+
+      .btn-primary, .btn-secondary {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .btn-primary {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #0056b3;
+      }
+
+      .btn-primary:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: inherit;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+
+      input[type="email"], input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+
       .loading-overlay {
         position: absolute;
         top: 0;
@@ -499,12 +587,12 @@
   <body>    
     <div id="app" class="container">
       <!-- お問い合わせボタン -->
-      <a 
-        href="contact.html" 
+      <button 
+        @click="showContactModal = true"
         class="contact-button"
-        style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-size: 14px; display: inline-block;">
+        style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-size: 14px; display: inline-block; cursor: pointer;">
         お問い合わせ
-      </a>
+      </button>
       
       <h1>朝夕食予約システム</h1>
            
@@ -629,6 +717,55 @@
         </div>
       </div>
     </div>
+
+    <!-- お問い合わせモーダル -->
+    <div class="modal" v-show="showContactModal" @click="closeContactModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>お問い合わせ</h3>
+          <button class="close-button" @click="closeContactModal">&times;</button>
+        </div>
+        
+        <form @submit.prevent="submitContact">
+          <div class="form-group">
+            <label for="contactEmail">メールアドレス *</label>
+            <input 
+              type="email" 
+              id="contactEmail"
+              v-model="contactForm.email" 
+              required
+              placeholder="your@email.com">
+          </div>
+          
+          <div class="form-group">
+            <label for="contactSubject">件名 *</label>
+            <input 
+              type="text" 
+              id="contactSubject"
+              v-model="contactForm.subject" 
+              required
+              placeholder="お問い合わせの件名">
+          </div>
+          
+          <div class="form-group">
+            <label for="contactMessage">お問い合わせ内容 *</label>
+            <textarea 
+              id="contactMessage"
+              v-model="contactForm.message" 
+              required
+              rows="5"
+              placeholder="お問い合わせ内容を詳しくご記入ください"></textarea>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" @click="closeContactModal">キャンセル</button>
+            <button type="submit" class="btn-primary" :disabled="contactSubmitting">
+              {{ contactSubmitting ? '送信中...' : '送信' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
     
     <script>      
       new Vue({
@@ -652,7 +789,16 @@
           menuMap: {},
           
           // 自動更新関連
-          autoUpdateInterval: null
+          autoUpdateInterval: null,
+          
+          // お問い合わせ関連
+          showContactModal: false,
+          contactForm: {
+            email: '',
+            subject: '',
+            message: ''
+          },
+          contactSubmitting: false
         },
         methods: {
           // ユーザーデータ取得
@@ -1012,6 +1158,55 @@
             const month = (date.getMonth() + 1).toString().padStart(2, "0");
             const day = date.getDate().toString().padStart(2, "0");
             return `${year}-${month}-${day}`;
+          },
+
+          // お問い合わせモーダルを閉じる
+          closeContactModal: function() {
+            this.showContactModal = false;
+            // フォームをリセット
+            this.contactForm = {
+              email: '',
+              subject: '',
+              message: ''
+            };
+          },
+
+          // お問い合わせを送信
+          submitContact: function() {
+            if (!this.contactForm.email || !this.contactForm.subject || !this.contactForm.message) {
+              alert('すべての項目を入力してください。');
+              return;
+            }
+
+            this.contactSubmitting = true;
+
+            google.script.run
+              .withSuccessHandler(this.handleContactSuccess)
+              .withFailureHandler(this.handleContactError)
+              .submitQuestionnaire(
+                this.contactForm.email,
+                this.contactForm.subject,
+                this.contactForm.message
+              );
+          },
+
+          // お問い合わせ送信成功時の処理
+          handleContactSuccess: function(response) {
+            this.contactSubmitting = false;
+
+            if (response.success) {
+              alert('お問い合わせを送信しました。ありがとうございます。');
+              this.closeContactModal();
+            } else {
+              alert('送信に失敗しました: ' + response.message);
+            }
+          },
+
+          // お問い合わせ送信エラー時の処理
+          handleContactError: function(error) {
+            this.contactSubmitting = false;
+            console.error('お問い合わせ送信中にエラーが発生しました:', error);
+            alert('送信中にエラーが発生しました。しばらくしてから再試行してください。');
           }
         },
         // コンポーネント初期化時の処理

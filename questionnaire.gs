@@ -1,4 +1,4 @@
-function submitQuestionnaire(type, detail) {
+function submitQuestionnaire(email, subject, message) {
   const spreadsheetId = "1-FWRtkpGNKHrLtc2V-f66ygsAI67wPaaWkt26R_Pg1c";
   const ss = SpreadsheetApp.openById(spreadsheetId);
   const sheet = ss.getSheetByName("questionnaire");
@@ -12,7 +12,7 @@ function submitQuestionnaire(type, detail) {
   
   try {
     const timestamp = new Date();
-    sheet.appendRow([timestamp, type, detail]);
+    sheet.appendRow([timestamp, email, subject, message]);
     
     return {
       success: true,
