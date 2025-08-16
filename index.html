@@ -642,7 +642,8 @@
       }
 
       .contact-form input,
-      .contact-form textarea {
+      .contact-form textarea,
+      .contact-form select {
         width: 100%;
         padding: 12px 15px;
         border: 1px solid #ddd;
@@ -654,7 +655,8 @@
       }
 
       .contact-form input:focus,
-      .contact-form textarea:focus {
+      .contact-form textarea:focus,
+      .contact-form select:focus {
         outline: none;
         border-color: #007bff;
         box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
@@ -747,33 +749,27 @@
               
               <form @submit.prevent="submitContact" class="contact-form">
                 <div class="form-group">
-                  <label for="contactEmail">メールアドレス *</label>
-                  <input 
-                    type="email" 
-                    id="contactEmail"
-                    v-model="contactForm.email" 
-                    required
-                    placeholder="your@email.com">
+                  <label for="contactType">お問い合わせ種別 *</label>
+                  <select 
+                    id="contactType"
+                    v-model="contactForm.type" 
+                    required>
+                    <option value="">選択してください</option>
+                    <option value="予約について">予約について</option>
+                    <option value="メニューについて">メニューについて</option>
+                    <option value="システムの不具合">システムの不具合</option>
+                    <option value="その他">その他</option>
+                  </select>
                 </div>
                 
                 <div class="form-group">
-                  <label for="contactSubject">件名 *</label>
-                  <input 
-                    type="text" 
-                    id="contactSubject"
-                    v-model="contactForm.subject" 
-                    required
-                    placeholder="お問い合わせの件名">
-                </div>
-                
-                <div class="form-group">
-                  <label for="contactMessage">お問い合わせ内容 *</label>
+                  <label for="contactDetail">詳細内容 *</label>
                   <textarea 
-                    id="contactMessage"
-                    v-model="contactForm.message" 
+                    id="contactDetail"
+                    v-model="contactForm.detail" 
                     required
-                    rows="5"
-                    placeholder="お問い合わせ内容を詳しくご記入ください"></textarea>
+                    rows="6"
+                    placeholder="お問い合わせの詳細をご記入ください"></textarea>
                 </div>
                 
                 <div class="form-actions">
@@ -897,9 +893,8 @@
           // お問い合わせ関連
           isShowed: false,
           contactForm: {
-            email: '',
-            subject: '',
-            message: ''
+            type: '',
+            detail: ''
           },
           contactSubmitting: false
         },
@@ -1268,16 +1263,15 @@
             this.isShowed = false;
             // フォームをリセット
             this.contactForm = {
-              email: '',
-              subject: '',
-              message: ''
+              type: '',
+              detail: ''
             };
           },
 
           // お問い合わせを送信
           submitContact: function() {
-            if (!this.contactForm.email || !this.contactForm.subject || !this.contactForm.message) {
-              alert('すべての項目を入力してください。');
+            if (!this.contactForm.type || !this.contactForm.detail) {
+              alert('お問い合わせの種別と詳細内容を入力してください。');
               return;
             }
 
@@ -1287,9 +1281,8 @@
               .withSuccessHandler(this.handleContactSuccess)
               .withFailureHandler(this.handleContactError)
               .submitQuestionnaire(
-                this.contactForm.email,
-                this.contactForm.subject,
-                this.contactForm.message
+                this.contactForm.type,
+                this.contactForm.detail
               );
           },
 
