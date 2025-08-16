@@ -360,7 +360,7 @@
         border-radius: 5px;
         cursor: pointer;
         font-size: 14px;
-        z-index: 1000;
+        z-index: 9999;
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         transition: background 0.3s;
       }
@@ -499,7 +499,12 @@
   <body>    
     <div id="app" class="container">
       <!-- お問い合わせボタン -->
-      <button class="contact-button" @click="openContactModal">お問い合わせ</button>
+      <button 
+        class="contact-button" 
+        @click="openContactModal"
+        style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+        お問い合わせ
+      </button>
       
       <h1>朝夕食予約システム</h1>
            
@@ -1061,7 +1066,9 @@
           
           // お問い合わせモーダルを開く
           openContactModal: function() {
+            console.log('お問い合わせボタンがクリックされました');
             this.showContactModal = true;
+            console.log('showContactModal:', this.showContactModal);
           },
           
           // お問い合わせモーダルを閉じる
