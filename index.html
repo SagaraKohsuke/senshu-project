@@ -499,12 +499,12 @@
   <body>    
     <div id="app" class="container">
       <!-- お問い合わせボタン -->
-      <button 
-        class="contact-button" 
-        @click="openContactModal"
-        style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+      <a 
+        href="contact.html" 
+        class="contact-button"
+        style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-size: 14px; display: inline-block;">
         お問い合わせ
-      </button>
+      </a>
       
       <h1>朝夕食予約システム</h1>
            
@@ -630,51 +630,6 @@
       </div>
     </div>
     
-    <!-- お問い合わせモーダル -->
-    <div 
-      class="modal" 
-      :class="{ 'show': showContactModal }"
-      :style="{ display: showContactModal ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center', position: 'fixed', zIndex: 10000, left: 0, top: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)' }">
-      <div class="modal-content">
-        <span class="close" @click="closeContactModal">&times;</span>
-        <h2>お問い合わせ</h2>
-        
-        <div class="form-group-modal">
-          <label for="contactType">お問い合わせの種類:</label>
-          <select id="contactType" v-model="contactForm.type">
-            <option value="">選択してください</option>
-            <option value="バグ報告">バグ報告</option>
-            <option value="不具合">不具合</option>
-            <option value="機能要望">機能要望</option>
-            <option value="処理速度・パフォーマンス">処理速度・パフォーマンス</option>
-            <option value="操作方法について">操作方法について</option>
-            <option value="その他">その他</option>
-          </select>
-        </div>
-        
-        <div class="form-group-modal">
-          <label for="contactDetail">詳細内容:</label>
-          <textarea 
-            id="contactDetail" 
-            v-model="contactForm.detail" 
-            placeholder="具体的な内容をお書きください..."></textarea>
-        </div>
-        
-        <div class="modal-buttons">
-          <button class="modal-btn secondary" @click="closeContactModal">キャンセル</button>
-          <button 
-            class="modal-btn primary" 
-            @click="submitContact"
-            :disabled="!contactForm.type || !contactForm.detail">送信</button>
-        </div>
-        
-        <!-- 送信中のローディング表示 -->
-        <div v-if="contactSubmitting" class="loading-overlay">
-          <div class="loading">送信中...</div>
-        </div>
-      </div>
-    </div>
-    
     <script>      
       new Vue({
         el: '#app',
@@ -697,15 +652,7 @@
           menuMap: {},
           
           // 自動更新関連
-          autoUpdateInterval: null,
-          
-          // お問い合わせフォーム関連
-          showContactModal: false,
-          contactSubmitting: false,
-          contactForm: {
-            type: '',
-            detail: ''
-          }
+          autoUpdateInterval: null
         },
         methods: {
           // ユーザーデータ取得
@@ -1059,74 +1006,13 @@
             }
           },
           
-          // ローカル用の日付フォーマット関数
+                    // ローカル用の日付フォーマット関数
           formatDateLocal: function(date) {
             const year = date.getFullYear();
             const month = (date.getMonth() + 1).toString().padStart(2, "0");
             const day = date.getDate().toString().padStart(2, "0");
             return `${year}-${month}-${day}`;
-          },
-          
-          // お問い合わせモーダルを開く
-          openContactModal: function() {
-            console.log('お問い合わせボタンがクリックされました');
-            this.showContactModal = true;
-            console.log('showContactModal:', this.showContactModal);
-            
-            // DOM要素とクラス確認用のデバッグ
-            this.$nextTick(() => {
-              const modalElement = document.querySelector('.modal');
-              console.log('モーダル要素:', modalElement);
-              if (modalElement) {
-                console.log('モーダルのクラス一覧:', modalElement.classList.toString());
-                console.log('showクラスの有無:', modalElement.classList.contains('show'));
-                console.log('モーダルのスタイル:', window.getComputedStyle(modalElement).display);
-                console.log('インラインスタイル:', modalElement.style.display);
-              }
-            });
-          },
-          
-          // お問い合わせモーダルを閉じる
-          closeContactModal: function() {
-            this.showContactModal = false;
-            // フォームをリセット
-            this.contactForm.type = '';
-            this.contactForm.detail = '';
-          },
-          
-          // お問い合わせを送信
-          submitContact: function() {
-            if (!this.contactForm.type || !this.contactForm.detail) {
-              alert('お問い合わせの種類と詳細内容を入力してください。');
-              return;
-            }
-            
-            this.contactSubmitting = true;
-            
-            google.script.run
-              .withSuccessHandler(this.handleContactSuccess)
-              .withFailureHandler(this.handleContactError)
-              .submitQuestionnaire(this.contactForm.type, this.contactForm.detail);
-          },
-          
-          // お問い合わせ送信成功時の処理
-          handleContactSuccess: function(response) {
-            this.contactSubmitting = false;
-            
-            if (response.success) {
-              alert('お問い合わせを送信しました。ありがとうございます。');
-              this.closeContactModal();
-            } else {
-              alert('送信に失敗しました: ' + response.message);
-            }
-          },
-          
-          // お問い合わせ送信エラー時の処理
-          handleContactError: function(error) {
-            this.contactSubmitting = false;
-            console.error('お問い合わせ送信中にエラーが発生しました:', error);
-            alert('送信中にエラーが発生しました。しばらくしてから再試行してください。');
-          },
+          }
         },
         // コンポーネント初期化時の処理
         mounted: function() {

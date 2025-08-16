@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お問い合わせ - 朝夕食予約システム</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: #5a6268;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: background 0.3s;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #007bff;
+            margin: 20px 0;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="javascript:history.back()" class="back-btn">← 戻る</a>
+        
+        <div class="header">
+            <h1>お問い合わせ</h1>
+            <p>ご不明な点やご要望がございましたら、お気軽にお問い合わせください。</p>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            送信中...
+        </div>
+        
+        <div id="successMessage" class="success-message" style="display: none;">
+            お問い合わせを送信しました。ありがとうございます。
+        </div>
+        
+        <div id="errorMessage" class="error-message" style="display: none;">
+            送信中にエラーが発生しました。しばらくしてから再試行してください。
+        </div>
+        
+        <form id="contactForm">
+            <div class="form-group">
+                <label for="contactType">お問い合わせの種類 <span style="color: red;">*</span></label>
+                <select id="contactType" required>
+                    <option value="">選択してください</option>
+                    <option value="バグ報告">バグ報告</option>
+                    <option value="不具合">不具合</option>
+                    <option value="機能要望">機能要望</option>
+                    <option value="処理速度・パフォーマンス">処理速度・パフォーマンス</option>
+                    <option value="操作方法について">操作方法について</option>
+                    <option value="その他">その他</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="contactDetail">詳細内容 <span style="color: red;">*</span></label>
+                <textarea 
+                    id="contactDetail" 
+                    placeholder="具体的な内容をお書きください..."
+                    required></textarea>
+            </div>
+            
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary" onclick="history.back()">キャンセル</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">送信</button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const type = document.getElementById('contactType').value;
+            const detail = document.getElementById('contactDetail').value;
+            
+            if (!type || !detail) {
+                alert('お問い合わせの種類と詳細内容を入力してください。');
+                return;
+            }
+            
+            // ボタンを無効化
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            
+            // ローディング表示
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            // Google Apps Scriptに送信
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    document.getElementById('loading').style.display = 'none';
+                    
+                    if (response.success) {
+                        document.getElementById('successMessage').style.display = 'block';
+                        document.getElementById('contactForm').style.display = 'none';
+                        
+                        // 3秒後に戻る
+                        setTimeout(function() {
+                            history.back();
+                        }, 3000);
+                    } else {
+                        document.getElementById('errorMessage').textContent = response.message;
+                        document.getElementById('errorMessage').style.display = 'block';
+                        submitBtn.disabled = false;
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('errorMessage').style.display = 'block';
+                    submitBtn.disabled = false;
+                })
+                .submitQuestionnaire(type, detail);
+        });
+    </script>
+</body>
+</html>
