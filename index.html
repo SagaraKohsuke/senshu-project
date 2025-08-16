@@ -373,7 +373,7 @@
       .modal {
         display: none;
         position: fixed;
-        z-index: 2000;
+        z-index: 10000;
         left: 0;
         top: 0;
         width: 100%;
@@ -631,7 +631,10 @@
     </div>
     
     <!-- お問い合わせモーダル -->
-    <div class="modal" :class="{ show: showContactModal }">
+    <div 
+      class="modal" 
+      :class="{ show: showContactModal }"
+      :style="{ display: showContactModal ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center' }">
       <div class="modal-content">
         <span class="close" @click="closeContactModal">&times;</span>
         <h2>お問い合わせ</h2>
@@ -1069,6 +1072,16 @@
             console.log('お問い合わせボタンがクリックされました');
             this.showContactModal = true;
             console.log('showContactModal:', this.showContactModal);
+            
+            // DOM要素とクラス確認用のデバッグ
+            this.$nextTick(() => {
+              const modalElement = document.querySelector('.modal');
+              console.log('モーダル要素:', modalElement);
+              if (modalElement) {
+                console.log('モーダルのクラス一覧:', modalElement.classList.toString());
+                console.log('モーダルのスタイル:', window.getComputedStyle(modalElement).display);
+              }
+            });
           },
           
           // お問い合わせモーダルを閉じる
