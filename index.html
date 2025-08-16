@@ -569,6 +569,109 @@
         border-radius: 10px;
       }
 
+      /* お問い合わせフォームオーバーレイ */
+      .contact-form-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      .contact-form-container {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        width: 100%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .contact-form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .contact-form-header h3 {
+        margin: 0;
+        color: #333;
+        font-size: 1.4rem;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: #999;
+        padding: 0;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+      }
+
+      .close-btn:hover {
+        color: #333;
+        background: #f5f5f5;
+      }
+
+      .contact-form .form-group {
+        margin-bottom: 20px;
+      }
+
+      .contact-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .contact-form input,
+      .contact-form textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+      }
+
+      .contact-form input:focus,
+      .contact-form textarea:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+      }
+
+      .contact-form textarea {
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      .contact-form .form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 25px;
+      }
+
       @media (max-width: 768px) {
         .contact-button {
           top: 10px;
@@ -588,7 +691,7 @@
     <div id="app" class="container">
       <!-- お問い合わせボタン -->
       <button 
-        @click="showContactModal = true"
+        @click="isShowed = true"
         class="contact-button"
         style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-size: 14px; display: inline-block; cursor: pointer;">
         お問い合わせ
@@ -632,6 +735,55 @@
           <!-- 締切時間に関する説明 -->
           <div style="margin: 15px 0; font-size: 0.9rem; text-align: center; padding: 0 10px;">
             <p style="margin: 5px 0;"><strong>予約締切時間</strong>: 朝食は前日12:00まで、夕食は当日12:00まで</p>
+          </div>
+
+          <!-- お問い合わせフォーム -->
+          <div v-show="isShowed" class="contact-form-overlay">
+            <div class="contact-form-container">
+              <div class="contact-form-header">
+                <h3>お問い合わせ</h3>
+                <button type="button" class="close-btn" @click="isShowed = false">&times;</button>
+              </div>
+              
+              <form @submit.prevent="submitContact" class="contact-form">
+                <div class="form-group">
+                  <label for="contactEmail">メールアドレス *</label>
+                  <input 
+                    type="email" 
+                    id="contactEmail"
+                    v-model="contactForm.email" 
+                    required
+                    placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                  <label for="contactSubject">件名 *</label>
+                  <input 
+                    type="text" 
+                    id="contactSubject"
+                    v-model="contactForm.subject" 
+                    required
+                    placeholder="お問い合わせの件名">
+                </div>
+                
+                <div class="form-group">
+                  <label for="contactMessage">お問い合わせ内容 *</label>
+                  <textarea 
+                    id="contactMessage"
+                    v-model="contactForm.message" 
+                    required
+                    rows="5"
+                    placeholder="お問い合わせ内容を詳しくご記入ください"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary" @click="isShowed = false">キャンセル</button>
+                  <button type="submit" class="btn-primary" :disabled="contactSubmitting">
+                    {{ contactSubmitting ? '送信中...' : '送信' }}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
           
           <!-- カレンダー表示エリア -->
@@ -718,56 +870,7 @@
       </div>
     </div>
 
-    <!-- お問い合わせモーダル -->
-    <div class="modal" v-show="showContactModal" @click="closeContactModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>お問い合わせ</h3>
-          <button class="close-button" @click="closeContactModal">&times;</button>
-        </div>
-        
-        <form @submit.prevent="submitContact">
-          <div class="form-group">
-            <label for="contactEmail">メールアドレス *</label>
-            <input 
-              type="email" 
-              id="contactEmail"
-              v-model="contactForm.email" 
-              required
-              placeholder="your@email.com">
-          </div>
-          
-          <div class="form-group">
-            <label for="contactSubject">件名 *</label>
-            <input 
-              type="text" 
-              id="contactSubject"
-              v-model="contactForm.subject" 
-              required
-              placeholder="お問い合わせの件名">
-          </div>
-          
-          <div class="form-group">
-            <label for="contactMessage">お問い合わせ内容 *</label>
-            <textarea 
-              id="contactMessage"
-              v-model="contactForm.message" 
-              required
-              rows="5"
-              placeholder="お問い合わせ内容を詳しくご記入ください"></textarea>
-          </div>
-          
-          <div class="form-actions">
-            <button type="button" class="btn-secondary" @click="closeContactModal">キャンセル</button>
-            <button type="submit" class="btn-primary" :disabled="contactSubmitting">
-              {{ contactSubmitting ? '送信中...' : '送信' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-    
-    <script>      
+    <script>
       new Vue({
         el: '#app',
         data: {
@@ -792,7 +895,7 @@
           autoUpdateInterval: null,
           
           // お問い合わせ関連
-          showContactModal: false,
+          isShowed: false,
           contactForm: {
             email: '',
             subject: '',
@@ -1160,9 +1263,9 @@
             return `${year}-${month}-${day}`;
           },
 
-          // お問い合わせモーダルを閉じる
-          closeContactModal: function() {
-            this.showContactModal = false;
+          // お問い合わせフォームを閉じる
+          closeContactForm: function() {
+            this.isShowed = false;
             // フォームをリセット
             this.contactForm = {
               email: '',
@@ -1196,7 +1299,7 @@
 
             if (response.success) {
               alert('お問い合わせを送信しました。ありがとうございます。');
-              this.closeContactModal();
+              this.closeContactForm();
             } else {
               alert('送信に失敗しました: ' + response.message);
             }
