@@ -633,8 +633,8 @@
     <!-- お問い合わせモーダル -->
     <div 
       class="modal" 
-      :class="{ show: showContactModal }"
-      :style="{ display: showContactModal ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center' }">
+      :class="{ 'show': showContactModal }"
+      :style="{ display: showContactModal ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center', position: 'fixed', zIndex: 10000, left: 0, top: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)' }">
       <div class="modal-content">
         <span class="close" @click="closeContactModal">&times;</span>
         <h2>お問い合わせ</h2>
@@ -1079,7 +1079,9 @@
               console.log('モーダル要素:', modalElement);
               if (modalElement) {
                 console.log('モーダルのクラス一覧:', modalElement.classList.toString());
+                console.log('showクラスの有無:', modalElement.classList.contains('show'));
                 console.log('モーダルのスタイル:', window.getComputedStyle(modalElement).display);
+                console.log('インラインスタイル:', modalElement.style.display);
               }
             });
           },
