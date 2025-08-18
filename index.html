@@ -966,12 +966,22 @@
             this.users = usersData;
             this.loading = false;
             
-            // path parameterがある場合は自動的に最初のユーザーを選択
-            if (this.hasPathParameter && usersData.length > 0) {
-              this.selectedUserId = usersData[0].userId;
-              this.roomNumberConfirmed = true; // path parameterがある場合は部屋番号確認をスキップ
-              this.loadCalendarData();
+            // path parameterがある場合のみ、パラメーターに基づいてユーザーを選択
+            if (this.hasPathParameter && this.pathParameters && this.pathParameters.room) {
+              const roomNumber = this.pathParameters.room;
+              const targetUser = usersData.find(user => user.userId === roomNumber);
+              
+              if (targetUser) {
+                this.selectedUserId = targetUser.userId;
+                this.roomNumberConfirmed = true; // path parameterがある場合は部屋番号確認をスキップ
+                this.loadCalendarData();
+              } else {
+                console.warn('指定された部屋番号のユーザーが見つかりません:', roomNumber);
+                // ユーザーが見つからない場合は手動選択に戻る
+                this.hasPathParameter = false;
+              }
             }
+            // パラメーターがない場合は何もせず、ユーザーの手動選択を待つ
           },
           
           // エラー処理          
@@ -1396,6 +1406,22 @@
         },
         // コンポーネント初期化時の処理
         mounted: function() {
+          // デバッグ用: パラメーターの状況を確認
+          console.log('hasPathParameter:', this.hasPathParameter);
+          console.log('pathParameters (raw):', this.pathParameters);
+          
+          // pathParametersが文字列の場合はJSONパース
+          if (typeof this.pathParameters === 'string') {
+            try {
+              this.pathParameters = JSON.parse(this.pathParameters);
+            } catch (e) {
+              console.error('pathParametersのパースに失敗:', e);
+              this.pathParameters = {};
+            }
+          }
+          
+          console.log('pathParameters (parsed):', this.pathParameters);
+          
           this.fetchUsers();
           this.startAutoUpdate(); // 自動更新開始
         },
