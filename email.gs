@@ -171,3 +171,117 @@ function sendReservationURLEmail() {
   
   return sendBulkEmailToUsers(subject, bodyTemplate);
 }
+
+/**
+ * メール送信のテスト関数（デバッグ用）
+ * @return {Object} テスト結果
+ */
+function testEmailFunction() {
+  try {
+    // 1. スプレッドシートの接続確認
+    console.log("1. スプレッドシート接続テスト開始");
+    const userSheet = ss.getSheetByName("users");
+    if (!userSheet) {
+      return {
+        success: false,
+        message: "usersシートが見つかりません",
+        step: "スプレッドシート接続"
+      };
+    }
+    console.log("✓ usersシートにアクセス成功");
+    
+    // 2. データ取得確認
+    const userData = userSheet.getDataRange().getValues();
+    console.log("✓ データ取得成功。行数:", userData.length);
+    
+    if (userData.length <= 1) {
+      return {
+        success: false,
+        message: "ユーザーデータが見つかりません",
+        step: "データ取得"
+      };
+    }
+    
+    // 3. 最初のユーザーデータを表示
+    const firstUser = userData[1]; // 2行目（1行目はヘッダー）
+    console.log("最初のユーザー:", {
+      userId: firstUser[0],
+      name: firstUser[1],
+      email: firstUser[2]
+    });
+    
+    // 4. テストメール送信（最初のユーザーのみ）
+    if (!firstUser[2]) {
+      return {
+        success: false,
+        message: "最初のユーザーにメールアドレスが設定されていません",
+        step: "メールアドレス確認"
+      };
+    }
+    
+    const testSubject = "【テスト】朝夕食予約システム";
+    const testBody = `
+      <h2>テストメール</h2>
+      <p>${firstUser[1]} 様</p>
+      <p>これはテストメールです。</p>
+      <p>あなたの予約URL: https://script.google.com/macros/s/AKfycbyV0jDcsGHIRAY79IRsDMVEGa7RPlrpwt_Bu-Xn8BEp6LQabxhedrKbPExuaNSZjlrPJw/exec?room=${firstUser[0]}</p>
+    `;
+    
+    console.log("5. テストメール送信開始:", firstUser[2]);
+    MailApp.sendEmail({
+      to: firstUser[2],
+      subject: testSubject,
+      htmlBody: testBody
+    });
+    
+    return {
+      success: true,
+      message: `テストメールを ${firstUser[1]} (${firstUser[2]}) に送信しました`,
+      recipient: {
+        userId: firstUser[0],
+        name: firstUser[1],
+        email: firstUser[2]
+      }
+    };
+    
+  } catch (error) {
+    console.error("テストエラー:", error);
+    return {
+      success: false,
+      message: "テスト中にエラーが発生しました: " + error.message,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * Gmail設定と権限を確認する関数
+ * @return {Object} 確認結果
+ */
+function checkGmailSettings() {
+  try {
+    // Gmail APIの権限確認
+    const quota = MailApp.getRemainingDailyQuota();
+    console.log("Gmail日次送信可能数:", quota);
+    
+    // 現在のGoogleアカウント情報取得
+    const user = Session.getActiveUser();
+    const email = user.getEmail();
+    console.log("送信者アドレス:", email);
+    
+    return {
+      success: true,
+      quota: quota,
+      senderEmail: email,
+      message: `Gmail設定OK。日次送信可能数: ${quota}件, 送信者: ${email}`
+    };
+    
+  } catch (error) {
+    console.error("Gmail設定確認エラー:", error);
+    return {
+      success: false,
+      message: "Gmail設定の確認に失敗しました: " + error.message,
+      error: error.toString()
+    };
+  }
+}
