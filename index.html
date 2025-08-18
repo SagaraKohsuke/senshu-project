@@ -733,7 +733,7 @@
       </div>
            
       <div v-else>       
-        <div class="form-group" v-if="!hasPathParameter">
+        <div class="form-group">
           <label for="userSelect">ユーザー選択:</label>
           <select id="userSelect" v-model="selectedUserId" @change="userSelected">
             <option value="">ユーザーを選択してください</option>            
@@ -966,19 +966,38 @@
             this.users = usersData;
             this.loading = false;
             
+            console.log('processUsers called');
+            console.log('hasPathParameter:', this.hasPathParameter);
+            console.log('pathParameters:', this.pathParameters);
+            console.log('users:', usersData);
+            
             // path parameterがある場合のみ、パラメーターに基づいてユーザーを選択
             if (this.hasPathParameter && this.pathParameters && this.pathParameters.room) {
               const roomNumber = this.pathParameters.room;
-              const targetUser = usersData.find(user => user.userId === roomNumber);
+              console.log('Looking for room:', roomNumber, 'type:', typeof roomNumber);
+              
+              // 文字列と数値の両方で検索
+              const targetUser = usersData.find(user => {
+                return user.userId === roomNumber || user.userId === String(roomNumber) || String(user.userId) === String(roomNumber);
+              });
+              
+              console.log('Found user:', targetUser);
               
               if (targetUser) {
                 this.selectedUserId = targetUser.userId;
                 this.roomNumberConfirmed = true; // path parameterがある場合は部屋番号確認をスキップ
-                this.loadCalendarData();
+                console.log('Auto-selected user:', this.selectedUserId);
+                
+                // Vue.js の次のティックでカレンダーデータを読み込み
+                this.$nextTick(() => {
+                  this.loadCalendarData();
+                });
               } else {
                 console.warn('指定された部屋番号のユーザーが見つかりません:', roomNumber);
+                console.log('Available user IDs:', usersData.map(u => u.userId));
                 // ユーザーが見つからない場合は手動選択に戻る
                 this.hasPathParameter = false;
+                alert(`部屋番号 ${roomNumber} のユーザーが見つかりませんでした。手動でユーザーを選択してください。`);
               }
             }
             // パラメーターがない場合は何もせず、ユーザーの手動選択を待つ
@@ -995,12 +1014,14 @@
           userSelected: function() {
             console.log('ユーザーが選択されました:', this.selectedUserId);
             if (this.selectedUserId) {
-              // path parameterがない場合は部屋番号確認が必要
-              if (!this.hasPathParameter) {
+              // path parameterがある場合は部屋番号確認をスキップ
+              if (this.hasPathParameter) {
+                this.roomNumberConfirmed = true;
+                this.loadCalendarData();
+              } else {
+                // path parameterがない場合は部屋番号確認が必要
                 this.roomNumberConfirmed = false;
                 this.inputRoomNumber = '';
-              } else {
-                this.loadCalendarData();
               }
             } else {
               this.calendarLoaded = false;
@@ -1407,13 +1428,16 @@
         // コンポーネント初期化時の処理
         mounted: function() {
           // デバッグ用: パラメーターの状況を確認
+          console.log('=== Vue.js mounted ===');
           console.log('hasPathParameter:', this.hasPathParameter);
           console.log('pathParameters (raw):', this.pathParameters);
+          console.log('pathParameters type:', typeof this.pathParameters);
           
           // pathParametersが文字列の場合はJSONパース
           if (typeof this.pathParameters === 'string') {
             try {
               this.pathParameters = JSON.parse(this.pathParameters);
+              console.log('pathParameters parsed successfully');
             } catch (e) {
               console.error('pathParametersのパースに失敗:', e);
               this.pathParameters = {};
@@ -1421,6 +1445,8 @@
           }
           
           console.log('pathParameters (parsed):', this.pathParameters);
+          console.log('room parameter:', this.pathParameters.room);
+          console.log('========================');
           
           this.fetchUsers();
           this.startAutoUpdate(); // 自動更新開始
