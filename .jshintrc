@@ -1,0 +1,12 @@
+{
+  "esversion": 6,
+  "node": false,
+  "browser": false,
+  "globals": {
+    "SpreadsheetApp": false,
+    "ScriptApp": false,
+    "HtmlService": false,
+    "console": false,
+    "Logger": false
+  }
+}
