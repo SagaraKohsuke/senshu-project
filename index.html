@@ -54,6 +54,33 @@
         font-size: 16px;
         box-sizing: border-box;
       }
+      
+      input[type="text"] {
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+      
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      
+      button:hover {
+        background-color: #0056b3;
+      }
+      
+      button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
       .loading {
         display: flex;
         justify-content: center;
@@ -715,8 +742,26 @@
             </option>
           </select>
         </div>
+        
+        <!-- 部屋番号入力フィールド（path parameterがない場合かつユーザー選択後） -->
+        <div class="form-group" v-if="!hasPathParameter && selectedUserId && !roomNumberConfirmed">
+          <label for="roomNumberInput">部屋番号を入力してください:</label>
+          <input 
+            id="roomNumberInput" 
+            type="text" 
+            v-model="inputRoomNumber" 
+            @keyup.enter="confirmRoomNumber"
+            placeholder="例: 101"
+            style="width: 200px; display: inline-block; margin-right: 10px;"
+          />
+          <button @click="confirmRoomNumber" :disabled="!inputRoomNumber.trim()">確認</button>
+          <p style="font-size: 0.9rem; color: #666; margin-top: 5px;">
+            選択されたユーザー: {{ getUserName() }}（{{ selectedUserId }}号室）<br>
+            入力した部屋番号と一致するか確認してください。
+          </p>
+        </div>
                 
-        <div v-if="selectedUserId" class="form-group">
+        <div v-if="(hasPathParameter && selectedUserId) || roomNumberConfirmed" class="form-group">
           <p>{{ getUserName() }}さん！ようこそ！</p>
           
           <!-- 月選択ナビゲーション -->
@@ -783,7 +828,7 @@
           </div>
           
           <!-- カレンダー表示エリア -->
-          <div class="calendar-container" v-if="calendarLoaded">
+          <div class="calendar-container" v-if="calendarLoaded && ((hasPathParameter && selectedUserId) || roomNumberConfirmed)">
             <!-- カレンダーの曜日ヘッダー -->
             <div class="calendar">
               <div v-for="(day, index) in weekdays" :key="index" class="weekday-header">{{ day }}</div>
@@ -859,7 +904,7 @@
           </div>
           
           <!-- カレンダーデータ読み込み中表示 -->
-          <div v-else-if="calendarLoading" class="loading">
+          <div v-else-if="calendarLoading && ((hasPathParameter && selectedUserId) || roomNumberConfirmed)" class="loading">
             カレンダーデータを読み込み中...
           </div>
         </div>
@@ -870,10 +915,18 @@
       new Vue({
         el: '#app',
         data: {
+          // Path parameter 関連
+          hasPathParameter: <?= hasPathParam ?>,
+          pathParameters: <?= pathParams ?>,
+          
           // ユーザー関連
           users: [],
           selectedUserId: '',
           loading: true,
+          
+          // 部屋番号確認関連
+          inputRoomNumber: '',
+          roomNumberConfirmed: false,
           
           // カレンダー関連
           currentYear: new Date().getFullYear(),
@@ -912,6 +965,31 @@
           processUsers: function(usersData) {
             this.users = usersData;
             this.loading = false;
+            
+            // path parameterがある場合のみ、パラメーターに基づいてユーザーを選択
+            if (this.hasPathParameter && this.pathParameters && this.pathParameters.room) {
+              const roomNumber = this.pathParameters.room;
+              
+              // 文字列と数値の両方で検索
+              const targetUser = usersData.find(user => {
+                return user.userId === roomNumber || user.userId === String(roomNumber) || String(user.userId) === String(roomNumber);
+              });
+              
+              if (targetUser) {
+                this.selectedUserId = targetUser.userId;
+                this.roomNumberConfirmed = true; // path parameterがある場合は部屋番号確認をスキップ
+                
+                // Vue.js の次のティックでカレンダーデータを読み込み
+                this.$nextTick(() => {
+                  this.loadCalendarData();
+                });
+              } else {
+                // ユーザーが見つからない場合は手動選択に戻る
+                this.hasPathParameter = false;
+                alert(`部屋番号 ${roomNumber} のユーザーが見つかりませんでした。手動でユーザーを選択してください。`);
+              }
+            }
+            // パラメーターがない場合は何もせず、ユーザーの手動選択を待つ
           },
           
           // エラー処理          
@@ -923,11 +1001,36 @@
           
           // ユーザー選択時の処理          
           userSelected: function() {
-            console.log('ユーザーが選択されました:', this.selectedUserId);
             if (this.selectedUserId) {
-              this.loadCalendarData();
+              // path parameterがある場合は部屋番号確認をスキップ
+              if (this.hasPathParameter) {
+                this.roomNumberConfirmed = true;
+                this.loadCalendarData();
+              } else {
+                // path parameterがない場合は部屋番号確認が必要
+                this.roomNumberConfirmed = false;
+                this.inputRoomNumber = '';
+              }
             } else {
               this.calendarLoaded = false;
+              this.roomNumberConfirmed = false;
+            }
+          },
+          
+          // 部屋番号確認処理
+          confirmRoomNumber: function() {
+            if (!this.inputRoomNumber.trim()) {
+              alert('部屋番号を入力してください。');
+              return;
+            }
+            
+            if (this.inputRoomNumber.trim() === this.selectedUserId) {
+              this.roomNumberConfirmed = true;
+              this.loadCalendarData();
+            } else {
+              alert('入力された部屋番号が選択されたユーザーの部屋番号と一致しません。\n' +
+                    '選択されたユーザー: ' + this.selectedUserId + '号室\n' +
+                    '入力された部屋番号: ' + this.inputRoomNumber.trim());
             }
           },
           
@@ -1067,6 +1170,11 @@
               return;
             }
             
+            if (!this.hasPathParameter && !this.roomNumberConfirmed) {
+              alert('部屋番号の確認が完了していません');
+              return;
+            }
+            
             const actionType = isReserved ? '予約' : '解除';
             const mealName = mealType === 'breakfast' ? '朝食' : '夕食';
             
@@ -1150,8 +1258,6 @@
           
           // チェックボックス変更時の処理
           handleCheckboxChange: function(calendarId, mealType, isChecked) {
-            console.log(`${mealType} for calendar ID ${calendarId} changed to ${isChecked}`);
-            
             // 締切時間チェック（安全対策として再度フロントエンドでチェック）
             const date = mealType === 'breakfast' 
               ? Object.keys(this.groupedBreakfast).find(key => this.groupedBreakfast[key].id === calendarId)
@@ -1190,7 +1296,7 @@
           // 予約更新後の処理
           reservationUpdated: function(response) {
             if (response.success) {
-              console.log('予約が更新されました');                            
+              // 予約が正常に更新されました                            
             } else {
               alert('予約の更新に失敗しました');             
               this.loadCalendarData();
@@ -1245,7 +1351,6 @@
             
             // 必要に応じて画面を更新
             if (needsUpdate) {
-              console.log('締切時間を過ぎたため、画面を更新します');
               this.$forceUpdate(); // Vue.jsの強制再描画
             }
           },
@@ -1307,6 +1412,15 @@
         },
         // コンポーネント初期化時の処理
         mounted: function() {
+          // pathParametersが文字列の場合はJSONパース
+          if (typeof this.pathParameters === 'string') {
+            try {
+              this.pathParameters = JSON.parse(this.pathParameters);
+            } catch (e) {
+              this.pathParameters = {};
+            }
+          }
+          
           this.fetchUsers();
           this.startAutoUpdate(); // 自動更新開始
         },
