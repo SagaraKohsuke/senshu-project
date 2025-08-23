@@ -882,12 +882,12 @@
                       {{ groupedBreakfast[date].menu_name }}
                       <!-- デバッグ情報 -->
                       <div style="font-size: 0.5rem; color: red; margin-top: 2px;">
-                        DEBUG: calorie={{ groupedBreakfast[date].calorie }}, 
-                        type={{ typeof groupedBreakfast[date].calorie }}, 
+                        DEBUG: menu_calorie={{ groupedBreakfast[date].menu_calorie }}, 
+                        type={{ typeof groupedBreakfast[date].menu_calorie }}, 
                         keys={{ Object.keys(groupedBreakfast[date]).join(', ') }}
                       </div>
-                      <span v-if="groupedBreakfast[date].calorie > 0" class="calorie-info"> ({{ groupedBreakfast[date].calorie }}kcal)</span>
-                      <span v-else class="calorie-info" style="color: orange;"> [カロリー情報なし: {{ groupedBreakfast[date].calorie }}]</span>
+                      <span v-if="groupedBreakfast[date].menu_calorie > 0" class="calorie-info"> ({{ groupedBreakfast[date].menu_calorie }}kcal)</span>
+                      <span v-else class="calorie-info" style="color: orange;"> [カロリー情報なし: {{ groupedBreakfast[date].menu_calorie }}]</span>
                     </div>
                   </div>
                   <div v-else class="meal-item">
@@ -917,12 +917,12 @@
                       {{ groupedDinner[date].menu_name }}
                       <!-- デバッグ情報 -->
                       <div style="font-size: 0.5rem; color: red; margin-top: 2px;">
-                        DEBUG: calorie={{ groupedDinner[date].calorie }}, 
-                        type={{ typeof groupedDinner[date].calorie }}, 
+                        DEBUG: menu_calorie={{ groupedDinner[date].menu_calorie }}, 
+                        type={{ typeof groupedDinner[date].menu_calorie }}, 
                         keys={{ Object.keys(groupedDinner[date]).join(', ') }}
                       </div>
-                      <span v-if="groupedDinner[date].calorie > 0" class="calorie-info"> ({{ groupedDinner[date].calorie }}kcal)</span>
-                      <span v-else class="calorie-info" style="color: orange;"> [カロリー情報なし: {{ groupedDinner[date].calorie }}]</span>
+                      <span v-if="groupedDinner[date].menu_calorie > 0" class="calorie-info"> ({{ groupedDinner[date].menu_calorie }}kcal)</span>
+                      <span v-else class="calorie-info" style="color: orange;"> [カロリー情報なし: {{ groupedDinner[date].menu_calorie }}]</span>
                     </div>
                   </div>
                   <div v-else-if="isSaturday(date)" class="meal-item">
