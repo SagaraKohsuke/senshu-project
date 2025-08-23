@@ -840,6 +840,18 @@
           
           <!-- カレンダー表示エリア -->
           <div class="calendar-container" v-if="calendarLoaded && ((hasPathParameter && selectedUserId) || roomNumberConfirmed)">
+            <!-- デバッグ表示 -->
+            <div style="background: #f0f0f0; padding: 10px; margin-bottom: 10px; font-size: 0.8rem;">
+              <strong>デバッグ情報:</strong><br>
+              朝食データ数: {{ Object.keys(groupedBreakfast).length }}<br>
+              夕食データ数: {{ Object.keys(groupedDinner).length }}<br>
+              月日付数: {{ monthDates.length }}<br>
+              <details style="margin-top: 5px;">
+                <summary>詳細データ</summary>
+                <pre style="font-size: 0.7rem; max-height: 200px; overflow-y: auto;">{{ JSON.stringify({groupedBreakfast, groupedDinner}, null, 2) }}</pre>
+              </details>
+            </div>
+            
             <!-- カレンダーの曜日ヘッダー -->
             <div class="calendar">
               <div v-for="(day, index) in weekdays" :key="index" class="weekday-header">{{ day }}</div>
@@ -868,7 +880,14 @@
                     </div>
                     <div class="menu">
                       {{ groupedBreakfast[date].menu_name }}
+                      <!-- デバッグ情報 -->
+                      <div style="font-size: 0.5rem; color: red; margin-top: 2px;">
+                        DEBUG: calorie={{ groupedBreakfast[date].calorie }}, 
+                        type={{ typeof groupedBreakfast[date].calorie }}, 
+                        keys={{ Object.keys(groupedBreakfast[date]).join(', ') }}
+                      </div>
                       <span v-if="groupedBreakfast[date].calorie > 0" class="calorie-info"> ({{ groupedBreakfast[date].calorie }}kcal)</span>
+                      <span v-else class="calorie-info" style="color: orange;"> [カロリー情報なし: {{ groupedBreakfast[date].calorie }}]</span>
                     </div>
                   </div>
                   <div v-else class="meal-item">
@@ -896,7 +915,14 @@
                     </div>
                     <div class="menu">
                       {{ groupedDinner[date].menu_name }}
+                      <!-- デバッグ情報 -->
+                      <div style="font-size: 0.5rem; color: red; margin-top: 2px;">
+                        DEBUG: calorie={{ groupedDinner[date].calorie }}, 
+                        type={{ typeof groupedDinner[date].calorie }}, 
+                        keys={{ Object.keys(groupedDinner[date]).join(', ') }}
+                      </div>
                       <span v-if="groupedDinner[date].calorie > 0" class="calorie-info"> ({{ groupedDinner[date].calorie }}kcal)</span>
+                      <span v-else class="calorie-info" style="color: orange;"> [カロリー情報なし: {{ groupedDinner[date].calorie }}]</span>
                     </div>
                   </div>
                   <div v-else-if="isSaturday(date)" class="meal-item">
@@ -1089,6 +1115,24 @@
           
           // カレンダーデータの処理
           processCalendarData: function(data) {
+            // デバッグ: 受信データをコンソール出力
+            console.log('=== processCalendarData DEBUG ===');
+            console.log('Full data received:', data);
+            console.log('groupedBreakfast:', data.groupedBreakfast);
+            console.log('groupedDinner:', data.groupedDinner);
+            
+            // 各日付のデータを詳しく見る
+            if (data.groupedBreakfast) {
+              Object.keys(data.groupedBreakfast).forEach(date => {
+                console.log(`朝食 ${date}:`, data.groupedBreakfast[date]);
+              });
+            }
+            if (data.groupedDinner) {
+              Object.keys(data.groupedDinner).forEach(date => {
+                console.log(`夕食 ${date}:`, data.groupedDinner[date]);
+              });
+            }
+            
             if (data.success) {
               this.offset = data.offset;
               this.monthDates = data.monthDates;
@@ -1096,6 +1140,10 @@
               this.groupedDinner = data.groupedDinner;
               this.menuMap = data.menuMap;
               this.calendarLoaded = true;
+              
+              // デバッグ: 設定後の状態確認
+              console.log('After setting this.groupedBreakfast:', this.groupedBreakfast);
+              console.log('After setting this.groupedDinner:', this.groupedDinner);
             } else {
               alert(data.message);
             }
