@@ -868,7 +868,7 @@
                     </div>
                     <div class="menu">
                       {{ groupedBreakfast[date].menu_name }}
-                      <span v-if="groupedBreakfast[date].menu_calorie > 0" class="calorie-info"> ({{ groupedBreakfast[date].menu_calorie }}kcal)</span>
+                      <span v-if="groupedBreakfast[date].calorie > 0" class="calorie-info"> ({{ groupedBreakfast[date].calorie }}kcal)</span>
                     </div>
                   </div>
                   <div v-else class="meal-item">
@@ -896,7 +896,7 @@
                     </div>
                     <div class="menu">
                       {{ groupedDinner[date].menu_name }}
-                      <span v-if="groupedDinner[date].menu_calorie > 0" class="calorie-info"> ({{ groupedDinner[date].menu_calorie }}kcal)</span>
+                      <span v-if="groupedDinner[date].calorie > 0" class="calorie-info"> ({{ groupedDinner[date].calorie }}kcal)</span>
                     </div>
                   </div>
                   <div v-else-if="isSaturday(date)" class="meal-item">
