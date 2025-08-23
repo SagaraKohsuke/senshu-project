@@ -147,6 +147,11 @@
         word-wrap: break-word;
         line-height: 1.2;
       }
+      .calorie-info {
+        color: #777;
+        font-size: 0.65rem;
+        font-weight: normal;
+      }
       .unavailable {
         font-size: 0.7rem;
         color: #999;
@@ -259,6 +264,9 @@
         .menu {
           font-size: 0.65rem;
         }
+        .calorie-info {
+          font-size: 0.6rem;
+        }
       }
       
       /* モバイル対応 */
@@ -311,6 +319,9 @@
           font-size: 0.6rem;
           padding-left: 1px;
           line-height: 1.1;
+        }
+        .calorie-info {
+          font-size: 0.55rem;
         }
         .unavailable {
           font-size: 0.6rem;
@@ -829,6 +840,7 @@
           
           <!-- カレンダー表示エリア -->
           <div class="calendar-container" v-if="calendarLoaded && ((hasPathParameter && selectedUserId) || roomNumberConfirmed)">
+            
             <!-- カレンダーの曜日ヘッダー -->
             <div class="calendar">
               <div v-for="(day, index) in weekdays" :key="index" class="weekday-header">{{ day }}</div>
@@ -857,6 +869,7 @@
                     </div>
                     <div class="menu">
                       {{ groupedBreakfast[date].menu_name }}
+                      <span v-if="groupedBreakfast[date].menu_name && groupedBreakfast[date].menu_calorie !== undefined && groupedBreakfast[date].menu_calorie !== null" class="calorie-info"> ({{ groupedBreakfast[date].menu_calorie }}kcal)</span>
                     </div>
                   </div>
                   <div v-else class="meal-item">
@@ -884,6 +897,7 @@
                     </div>
                     <div class="menu">
                       {{ groupedDinner[date].menu_name }}
+                      <span v-if="groupedDinner[date].menu_name && groupedDinner[date].menu_calorie !== undefined && groupedDinner[date].menu_calorie !== null" class="calorie-info"> ({{ groupedDinner[date].menu_calorie }}kcal)</span>
                     </div>
                   </div>
                   <div v-else-if="isSaturday(date)" class="meal-item">
