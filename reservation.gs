@@ -76,12 +76,17 @@ function getUserReservationCalendar(userId, year, month) {
   if (bMenuData.length > 1) {
     const bMenuIdIndex = bMenuData[0].indexOf("b_menu_id");
     const bMenuNameIndex = bMenuData[0].indexOf("breakfast_menu");
+    const bMenuCalorieIndex = bMenuData[0].indexOf("calorie");
 
     if (bMenuIdIndex !== -1 && bMenuNameIndex !== -1) {
       for (let i = 1; i < bMenuData.length; i++) {
         const menuId = bMenuData[i][bMenuIdIndex];
         const menuName = bMenuData[i][bMenuNameIndex];
-        bMenuMap[menuId] = menuName;
+        const calorie = bMenuCalorieIndex !== -1 ? bMenuData[i][bMenuCalorieIndex] : 0;
+        bMenuMap[menuId] = {
+          name: menuName,
+          calorie: calorie
+        };
       }
     }
   }
@@ -91,12 +96,17 @@ function getUserReservationCalendar(userId, year, month) {
   if (dMenuData.length > 1) {
     const dMenuIdIndex = dMenuData[0].indexOf("d_menu_id");
     const dMenuNameIndex = dMenuData[0].indexOf("dinner_menu");
+    const dMenuCalorieIndex = dMenuData[0].indexOf("calorie");
 
     if (dMenuIdIndex !== -1 && dMenuNameIndex !== -1) {
       for (let i = 1; i < dMenuData.length; i++) {
         const menuId = dMenuData[i][dMenuIdIndex];
         const menuName = dMenuData[i][dMenuNameIndex];
-        dMenuMap[menuId] = menuName;
+        const calorie = dMenuCalorieIndex !== -1 ? dMenuData[i][dMenuCalorieIndex] : 0;
+        dMenuMap[menuId] = {
+          name: menuName,
+          calorie: calorie
+        };
       }
     }
   }
@@ -136,11 +146,13 @@ function getUserReservationCalendar(userId, year, month) {
 
     if (date instanceof Date) {
       const dateStr = formatDate(date);
+      const menuInfo = bMenuMap[menuId] || { name: "未設定", calorie: 0 };
       breakfastCalendar[calendarId] = {
         id: calendarId,
         date: dateStr,
         menu_id: menuId,
-        menu_name: bMenuMap[menuId] || "未設定",
+        menu_name: menuInfo.name,
+        menu_calorie: menuInfo.calorie,
         is_active: isActive
       };
     }
@@ -157,11 +169,13 @@ function getUserReservationCalendar(userId, year, month) {
 
     if (date instanceof Date) {
       const dateStr = formatDate(date);
+      const menuInfo = dMenuMap[menuId] || { name: "未設定", calorie: 0 };
       dinnerCalendar[calendarId] = {
         id: calendarId,
         date: dateStr,
         menu_id: menuId,
-        menu_name: dMenuMap[menuId] || "未設定",
+        menu_name: menuInfo.name,
+        menu_calorie: menuInfo.calorie,
         is_active: isActive
       };
     }
