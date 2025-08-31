@@ -19,13 +19,13 @@ function createCalendarSheetsForYearMonth(year, month) {
 
   // 朝食カレンダーシートの作成
   const bSheet = spreadsheet.insertSheet(bSheetName);
-  bSheet.getRange("A1:C1").setValues([["b_calendar_id", "date", "b_menu_id"]]);
-  bSheet.getRange("A1:C1").setFontWeight("bold");
+  bSheet.getRange("A1:D1").setValues([["b_calendar_id", "date", "b_menu_id", "is_active"]]);
+  bSheet.getRange("A1:D1").setFontWeight("bold");
 
   // 夕食カレンダーシートの作成
   const dSheet = spreadsheet.insertSheet(dSheetName);
-  dSheet.getRange("A1:C1").setValues([["d_calendar_id", "date", "d_menu_id"]]);
-  dSheet.getRange("A1:C1").setFontWeight("bold");
+  dSheet.getRange("A1:D1").setValues([["d_calendar_id", "date", "d_menu_id", "is_active"]]);
+  dSheet.getRange("A1:D1").setFontWeight("bold");
 
   // 月の最終日を取得
   const lastDay = new Date(year, month, 0).getDate();
@@ -44,13 +44,13 @@ function createCalendarSheetsForYearMonth(year, month) {
     }
 
     // 朝食カレンダーに行を追加（日曜日以外）
-    bSheet.appendRow([bCalendarIdCounter, date, 0]);
+    bSheet.appendRow([bCalendarIdCounter, date, 0, true]);
     bCalendarIdCounter++;
 
     // 夕食カレンダーに行を追加（日曜日と土曜日以外）
     if (dayOfWeek !== 6) {
       // 土曜日は夕食を除外
-      dSheet.appendRow([dCalendarIdCounter, date, 0]);
+      dSheet.appendRow([dCalendarIdCounter, date, 0, true]);
       dCalendarIdCounter++;
     }
   }
@@ -67,8 +67,8 @@ function createCalendarSheetsForYearMonth(year, month) {
   }
 
   // 列の幅を自動調整
-  bSheet.autoResizeColumns(1, 3);
-  dSheet.autoResizeColumns(1, 3);
+  bSheet.autoResizeColumns(1, 4);
+  dSheet.autoResizeColumns(1, 4);
 
   return {
     success: true,
