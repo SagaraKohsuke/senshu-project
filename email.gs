@@ -174,87 +174,7 @@ function sendReservationURLEmail() {
   return sendBulkEmailToUsers(subject, bodyTemplate);
 }
 
-/**
- * メール送信のテスト関数（デバッグ用）
- * @return {Object} テスト結果
- */
-function testEmailFunction() {
-  try {
-    // 1. スプレッドシートの接続確認
-    console.log("1. スプレッドシート接続テスト開始");
-    const userSheet = ss.getSheetByName("users");
-    if (!userSheet) {
-      return {
-        success: false,
-        message: "usersシートが見つかりません",
-        step: "スプレッドシート接続"
-      };
-    }
-    console.log("✓ usersシートにアクセス成功");
-    
-    // 2. データ取得確認
-    const userData = userSheet.getDataRange().getValues();
-    console.log("✓ データ取得成功。行数:", userData.length);
-    
-    if (userData.length <= 1) {
-      return {
-        success: false,
-        message: "ユーザーデータが見つかりません",
-        step: "データ取得"
-      };
-    }
-    
-    // 3. 最初のユーザーデータを表示
-    const firstUser = userData[1]; // 2行目（1行目はヘッダー）
-    console.log("最初のユーザー:", {
-      userId: firstUser[0],
-      name: firstUser[1],
-      email: firstUser[2]
-    });
-    
-    // 4. テストメール送信（最初のユーザーのみ）
-    if (!firstUser[2]) {
-      return {
-        success: false,
-        message: "最初のユーザーにメールアドレスが設定されていません",
-        step: "メールアドレス確認"
-      };
-    }
-    
-    const testSubject = "【テスト】朝夕食予約システム";
-    const testBody = `
-      <h2>テストメール</h2>
-      <p>${firstUser[1]} 様</p>
-      <p>これはテストメールです。</p>
-      <p>あなたの予約URL: https://script.google.com/macros/s/AKfycbyV0jDcsGHIRAY79IRsDMVEGa7RPlrpwt_Bu-Xn8BEp6LQabxhedrKbPExuaNSZjlrPJw/exec?room=${firstUser[0]}</p>
-    `;
-    
-    console.log("5. テストメール送信開始:", firstUser[2]);
-    MailApp.sendEmail({
-      to: firstUser[2],
-      subject: testSubject,
-      htmlBody: testBody
-    });
-    
-    return {
-      success: true,
-      message: `テストメールを ${firstUser[1]} (${firstUser[2]}) に送信しました`,
-      recipient: {
-        userId: firstUser[0],
-        name: firstUser[1],
-        email: firstUser[2]
-      }
-    };
-    
-  } catch (error) {
-    console.error("テストエラー:", error);
-    return {
-      success: false,
-      message: "テスト中にエラーが発生しました: " + error.message,
-      error: error.toString()
-    };
-  }
-}
+
 
 /**
  * 月末リマインダーメールを全ユーザーに送信
@@ -347,41 +267,7 @@ function sendMonthlyReminderEmail() {
   return sendBulkEmailToUsers(subject, bodyTemplate);
 }
 
-/**
- * リマインダーメール送信のテスト関数（デバッグ用）
- * @return {Object} テスト結果
- */
-function testMonthlyReminderEmail() {
-  try {
-    console.log('Testing monthly reminder email function...');
-    
-    const result = sendMonthlyReminderEmail();
-    
-    console.log('Test result:', result);
-    
-    if (result.success) {
-      return {
-        success: true,
-        message: `テスト成功: ${result.successCount}件送信, ${result.failureCount}件失敗`,
-        details: result
-      };
-    } else {
-      return {
-        success: false,
-        message: 'テスト失敗: ' + result.message,
-        details: result
-      };
-    }
-    
-  } catch (error) {
-    console.error('Test error:', error);
-    return {
-      success: false,
-      message: 'テスト中にエラーが発生: ' + error.message,
-      error: error.toString()
-    };
-  }
-}
+
 
 /**
  * Gmail設定と権限を確認する関数
