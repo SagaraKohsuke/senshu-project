@@ -348,6 +348,42 @@ function sendMonthlyReminderEmail() {
 }
 
 /**
+ * リマインダーメール送信のテスト関数（デバッグ用）
+ * @return {Object} テスト結果
+ */
+function testMonthlyReminderEmail() {
+  try {
+    console.log('Testing monthly reminder email function...');
+    
+    const result = sendMonthlyReminderEmail();
+    
+    console.log('Test result:', result);
+    
+    if (result.success) {
+      return {
+        success: true,
+        message: `テスト成功: ${result.successCount}件送信, ${result.failureCount}件失敗`,
+        details: result
+      };
+    } else {
+      return {
+        success: false,
+        message: 'テスト失敗: ' + result.message,
+        details: result
+      };
+    }
+    
+  } catch (error) {
+    console.error('Test error:', error);
+    return {
+      success: false,
+      message: 'テスト中にエラーが発生: ' + error.message,
+      error: error.toString()
+    };
+  }
+}
+
+/**
  * Gmail設定と権限を確認する関数
  * @return {Object} 確認結果
  */
