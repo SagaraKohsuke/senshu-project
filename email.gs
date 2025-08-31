@@ -1,5 +1,7 @@
 /**
  * メール一斉送信機能
+ * 
+ * 注意: このファイルは main.gs で定義された ss (SpreadsheetApp) グローバル変数に依存します
  */
 
 /**
@@ -249,6 +251,133 @@ function testEmailFunction() {
     return {
       success: false,
       message: "テスト中にエラーが発生しました: " + error.message,
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * 月末リマインダーメールを全ユーザーに送信
+ * @return {Object} 送信結果
+ */
+function sendMonthlyReminderEmail() {
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1; // JavaScriptの月は0始まり
+  const currentYear = today.getFullYear();
+  
+  // 翌月の情報を計算
+  let nextMonth = currentMonth + 1;
+  let nextYear = currentYear;
+  
+  if (nextMonth > 12) {
+    nextMonth = 1;
+    nextYear++;
+  }
+  
+  const subject = `【泉州会館】${nextYear}年${nextMonth}月の朝夕食予約のお知らせ`;
+  
+  const bodyTemplate = `
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h2 style="color: #d73527; border-bottom: 2px solid #d73527; padding-bottom: 10px;">
+        📅 ${nextYear}年${nextMonth}月の朝夕食予約について
+      </h2>
+      
+      <p style="font-size: 16px; line-height: 1.6;">
+        {name} 様
+      </p>
+      
+      <p style="font-size: 16px; line-height: 1.6;">
+        いつもお世話になっております。<br>
+        ${nextYear}年${nextMonth}月の朝夕食予約期間が間もなく開始されます。
+      </p>
+      
+      <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; margin: 25px 0; border-radius: 8px;">
+        <h3 style="color: #856404; margin-top: 0; display: flex; align-items: center;">
+          ⚠️ 重要なお知らせ
+        </h3>
+        <p style="font-size: 16px; line-height: 1.8; color: #856404; margin: 15px 0;">
+          <strong>月末が近づいております。</strong><br>
+          ${nextYear}年${nextMonth}月分の朝夕食予約をお忘れなくお願いいたします。
+        </p>
+      </div>
+      
+      <div style="background: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0;">
+        <h3 style="color: #007bff; margin-top: 0;">🔗 あなた専用の予約ページ</h3>
+        <p style="margin: 10px 0;">
+          下記のリンクから簡単に予約できます。
+        </p>
+        <div style="text-align: center; margin: 15px 0;">
+          <a href="{link}" style="display: inline-block; background: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+            📅 ${nextYear}年${nextMonth}月の予約をする
+          </a>
+        </div>
+      </div>
+      
+      <div style="background: #d1ecf1; border: 1px solid #b8daff; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <h4 style="color: #0c5460; margin-top: 0;">⏰ 予約締切時間</h4>
+        <ul style="margin: 10px 0; color: #0c5460;">
+          <li><strong>朝食</strong>：前日の12:00まで</li>
+          <li><strong>夕食</strong>：当日の12:00まで</li>
+        </ul>
+        <p style="font-size: 14px; color: #0c5460; margin: 10px 0 0;">
+          締切時間を過ぎると予約・キャンセルができませんのでご注意ください。
+        </p>
+      </div>
+      
+      <div style="background: #e7f3ff; border: 1px solid #b3d9ff; padding: 15px; margin: 20px 0; border-radius: 5px;">
+        <h4 style="color: #0056b3; margin-top: 0;">💡 便利な一括予約機能</h4>
+        <p style="margin: 10px 0; color: #0056b3;">
+          予約ページでは「一括予約」ボタンをご利用いただけます。<br>
+          月全体の朝食・夕食をまとめて予約することが可能です。
+        </p>
+      </div>
+      
+      <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; font-size: 14px; color: #666;">
+        <p>
+          ご不明な点がございましたら、予約ページの「お問い合わせ」ボタンからお気軽にお尋ねください。
+        </p>
+        <p style="margin-top: 20px;">
+          泉州会館<br>
+          朝夕食予約システム
+        </p>
+      </div>
+    </div>
+  `;
+  
+  return sendBulkEmailToUsers(subject, bodyTemplate);
+}
+
+/**
+ * リマインダーメール送信のテスト関数（デバッグ用）
+ * @return {Object} テスト結果
+ */
+function testMonthlyReminderEmail() {
+  try {
+    console.log('Testing monthly reminder email function...');
+    
+    const result = sendMonthlyReminderEmail();
+    
+    console.log('Test result:', result);
+    
+    if (result.success) {
+      return {
+        success: true,
+        message: `テスト成功: ${result.successCount}件送信, ${result.failureCount}件失敗`,
+        details: result
+      };
+    } else {
+      return {
+        success: false,
+        message: 'テスト失敗: ' + result.message,
+        details: result
+      };
+    }
+    
+  } catch (error) {
+    console.error('Test error:', error);
+    return {
+      success: false,
+      message: 'テスト中にエラーが発生: ' + error.message,
       error: error.toString()
     };
   }
