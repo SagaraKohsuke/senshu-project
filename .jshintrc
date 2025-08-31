@@ -6,6 +6,9 @@
     "SpreadsheetApp": false,
     "ScriptApp": false,
     "HtmlService": false,
+    "MailApp": false,
+    "Utilities": false,
+    "Session": false,
     "console": false,
     "Logger": false
   }
