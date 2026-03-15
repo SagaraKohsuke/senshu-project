@@ -297,6 +297,25 @@ function updateReservation(
     .getRange(rowIndex + 1, isReservedIndex + 1)
     .setValue(isReserved);
 
+  // 食事原紙シートをリアルタイムで更新
+  const calendarSheet = ss.getSheetByName(calendarSheetName);
+  if (calendarSheet) {
+    const calendarData = calendarSheet.getDataRange().getValues();
+    const calendarHeaders = calendarData[0];
+    const calIdIndex = calendarHeaders.indexOf(`${prefix}_calendar_id`);
+    const calDateIndex = calendarHeaders.indexOf("date");
+    if (calIdIndex !== -1 && calDateIndex !== -1) {
+      for (let i = 1; i < calendarData.length; i++) {
+        if (calendarData[i][calIdIndex] == calendarId) {
+          const calDate = calendarData[i][calDateIndex];
+          const dateStr = calDate instanceof Date ? formatDate(calDate) : String(calDate);
+          updateMealSheetForUser(userId, dateStr, mealType, isReserved);
+          break;
+        }
+      }
+    }
+  }
+
   return {
     success: true,
   };
@@ -542,11 +561,37 @@ function bulkUpdateReservationsWithIds(userId, mealType, isReserved, year, month
     }
   }
   
+  // カレンダーシートから calendarId -> 日付 のマップを作成
+  const calendarSheetName = `${prefix}_calendar_${yyyyMM}`;
+  const calendarDateMap = {};
+  const calendarSheet = ss.getSheetByName(calendarSheetName);
+  if (calendarSheet) {
+    const calendarData = calendarSheet.getDataRange().getValues();
+    const calendarHeaders = calendarData[0];
+    const calIdIndex = calendarHeaders.indexOf(`${prefix}_calendar_id`);
+    const calDateIndex = calendarHeaders.indexOf("date");
+    if (calIdIndex !== -1 && calDateIndex !== -1) {
+      for (let i = 1; i < calendarData.length; i++) {
+        const calDate = calendarData[i][calDateIndex];
+        calendarDateMap[calendarData[i][calIdIndex]] =
+          calDate instanceof Date ? formatDate(calDate) : String(calDate);
+      }
+    }
+  }
+
   // 一括で更新
   let updatedCount = 0;
   for (const rowIndex of rowsToUpdate) {
     reservationSheet.getRange(rowIndex, isReservedIndex + 1).setValue(isReserved);
     updatedCount++;
+
+    // 食事原紙シートをリアルタイムで更新
+    const row = reservationData[rowIndex - 1];
+    const calId = row[calendarIdIndex];
+    const dateStr = calendarDateMap[calId];
+    if (dateStr) {
+      updateMealSheetForUser(userId, dateStr, mealType, isReserved);
+    }
   }
   
   return {
@@ -554,4 +599,67 @@ function bulkUpdateReservationsWithIds(userId, mealType, isReserved, year, month
     message: `${updatedCount}件の${mealType === "breakfast" ? "朝食" : "夕食"}予約を一括更新しました。`,
     updatedCount: updatedCount
   };
+}
+
+function updateMealSheetForUser(userId, date, mealType, isReserved) {
+  const mealSpreadsheetId = "17iuUzC-fx8lfMA8M5HrLwMlzvCpS9TCRcoCDzMrHjE4";
+  const mealSs = SpreadsheetApp.openById(mealSpreadsheetId);
+
+  const parts = date.split("-");
+  const year = parseInt(parts[0]);
+  const month = parseInt(parts[1]);
+  const day = parseInt(parts[2]);
+
+  const dateObj = new Date(year, month - 1, day);
+  const dayOfWeek = dateObj.getDay(); // 0=Sunday, 6=Saturday
+
+  // 土曜日の夕食は提供なし
+  if (mealType === "dinner" && dayOfWeek === 6) {
+    return;
+  }
+
+  const yyyyMM = `${year}${month.toString().padStart(2, "0")}`;
+  const sheetName = `食事原紙_${yyyyMM}`;
+  const sheet = mealSs.getSheetByName(sheetName);
+
+  if (!sheet) {
+    return;
+  }
+
+  // 列オフセット: 朝食=3列目(C), 夕食=4列目(D) から2列/日
+  const mealOffset = mealType === "dinner" ? 4 : 3;
+
+  let col;
+  let targetRowStart;
+  let targetRowEnd;
+
+  if (day <= 16) {
+    // 前半（1〜16日）: ヘッダー行2, ユーザー行5〜37
+    col = (day - 1) * 2 + mealOffset;
+    targetRowStart = 5;
+    targetRowEnd = 37;
+  } else {
+    // 後半（17〜31日）: ヘッダー行42, ユーザー行45〜77
+    col = (day - 17) * 2 + mealOffset;
+    targetRowStart = 45;
+    targetRowEnd = 77;
+  }
+
+  // A列を走査してuserIdに対応する行を取得
+  const aValues = sheet
+    .getRange(targetRowStart, 1, targetRowEnd - targetRowStart + 1, 1)
+    .getValues();
+  let targetRow = -1;
+  for (let i = 0; i < aValues.length; i++) {
+    if (aValues[i][0] == userId) {
+      targetRow = targetRowStart + i;
+      break;
+    }
+  }
+
+  if (targetRow === -1) {
+    return;
+  }
+
+  sheet.getRange(targetRow, col).setValue(isReserved ? 1 : "");
 }
