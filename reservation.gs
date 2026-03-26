@@ -756,3 +756,47 @@ function syncMealSheetFromReservations() {
 
   console.log(`[syncMealSheetFromReservations] 完了: 更新=${totalUpdated}件, スキップ=${totalSkipped}件`);
 }
+
+function syncAprilDinnerOnly() {
+  const baseDateStr = "2026-03-27";
+  const year = 2026;
+  const month = 4;
+  const yyyyMM = "202604";
+
+  console.log(`[syncAprilDinnerOnly] 開始`);
+
+  const dCalendarSheet    = ss.getSheetByName(`d_calendar_${yyyyMM}`);
+  const dReservationSheet = ss.getSheetByName(`d_reservations_${yyyyMM}`);
+
+  if (!dCalendarSheet || !dReservationSheet) {
+    console.warn("4月の夕食シートが見つかりません。");
+    return;
+  }
+
+  const calData = dCalendarSheet.getDataRange().getValues();
+  const calHeaders = calData[0];
+  const calIdIdx = calHeaders.indexOf("d_calendar_id");
+  const calDtIdx = calHeaders.indexOf("date");
+  const dateMap = {};
+  for (let i = 1; i < calData.length; i++) {
+    const d = calData[i][calDtIdx];
+    dateMap[calData[i][calIdIdx]] = d instanceof Date ? formatDate(d) : String(d);
+  }
+
+  const resData = dReservationSheet.getDataRange().getValues();
+  const resHeaders = resData[0];
+  const calIdx = resHeaders.indexOf("d_calendar_id");
+  const uidIdx = resHeaders.indexOf("user_id");
+  const resIdx = resHeaders.indexOf("is_reserved");
+
+  let updated = 0;
+  for (let i = 1; i < resData.length; i++) {
+    const row = resData[i];
+    const dateStr = dateMap[row[calIdx]];
+    if (!dateStr || dateStr < baseDateStr) continue;
+    updateMealSheetForUser(row[uidIdx], dateStr, "dinner", Boolean(row[resIdx]));
+    updated++;
+  }
+
+  console.log(`[syncAprilDinnerOnly] 完了: 更新=${updated}件`);
+}
