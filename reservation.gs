@@ -663,3 +663,96 @@ function updateMealSheetForUser(userId, date, mealType, isReserved) {
 
   sheet.getRange(targetRow, col).setValue(isReserved ? 1 : "");
 }
+
+function syncMealSheetFromReservations() {
+  const today = new Date();
+  const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+  const baseDateStr = formatDate(tomorrow);
+
+  console.log(`[syncMealSheetFromReservations] 開始: ${baseDateStr} 以降のデータを同期します`);
+
+  const thisYear = today.getFullYear();
+  const thisMonth = today.getMonth() + 1;
+  let nextMonth = thisMonth + 1;
+  let nextYear = thisYear;
+  if (nextMonth > 12) { nextMonth = 1; nextYear++; }
+
+  const targetMonths = [
+    { year: thisYear, month: thisMonth },
+    { year: nextYear, month: nextMonth }
+  ];
+
+  let totalUpdated = 0;
+  let totalSkipped = 0;
+
+  for (const { year, month } of targetMonths) {
+    const yyyyMM = `${year}${month.toString().padStart(2, "0")}`;
+    console.log(`--- ${year}年${month}月 処理開始 ---`);
+
+    const bCalendarSheet    = ss.getSheetByName(`b_calendar_${yyyyMM}`);
+    const dCalendarSheet    = ss.getSheetByName(`d_calendar_${yyyyMM}`);
+    const bReservationSheet = ss.getSheetByName(`b_reservations_${yyyyMM}`);
+    const dReservationSheet = ss.getSheetByName(`d_reservations_${yyyyMM}`);
+
+    if (!bCalendarSheet || !dCalendarSheet || !bReservationSheet || !dReservationSheet) {
+      console.warn(`${year}年${month}月: 必要なシートが見つかりません。スキップします。`);
+      continue;
+    }
+
+    const buildDateMap = (calSheet, idCol) => {
+      const data = calSheet.getDataRange().getValues();
+      const headers = data[0];
+      const idIdx = headers.indexOf(idCol);
+      const dtIdx = headers.indexOf("date");
+      const map = {};
+      for (let i = 1; i < data.length; i++) {
+        const d = data[i][dtIdx];
+        map[data[i][idIdx]] = d instanceof Date ? formatDate(d) : String(d);
+      }
+      return map;
+    };
+
+    const bDateMap = buildDateMap(bCalendarSheet, "b_calendar_id");
+    const dDateMap = buildDateMap(dCalendarSheet, "d_calendar_id");
+
+    const mealConfigs = [
+      { sheet: bReservationSheet, dateMap: bDateMap, mealType: "breakfast", idCol: "b_calendar_id" },
+      { sheet: dReservationSheet, dateMap: dDateMap, mealType: "dinner",    idCol: "d_calendar_id" }
+    ];
+
+    for (const { sheet, dateMap, mealType, idCol } of mealConfigs) {
+      const data = sheet.getDataRange().getValues();
+      const headers = data[0];
+      const calIdx = headers.indexOf(idCol);
+      const uidIdx = headers.indexOf("user_id");
+      const resIdx = headers.indexOf("is_reserved");
+
+      let updated = 0;
+      let skipped = 0;
+
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        const calId = row[calIdx];
+        const userId = row[uidIdx];
+        const isReserved = Boolean(row[resIdx]);
+        const dateStr = dateMap[calId];
+
+        if (!dateStr || dateStr < baseDateStr) {
+          skipped++;
+          totalSkipped++;
+          continue;
+        }
+
+        updateMealSheetForUser(userId, dateStr, mealType, isReserved);
+        updated++;
+        totalUpdated++;
+      }
+
+      console.log(`  ${mealType}: 更新=${updated}件, スキップ=${skipped}件`);
+    }
+
+    console.log(`--- ${year}年${month}月 処理完了 ---`);
+  }
+
+  console.log(`[syncMealSheetFromReservations] 完了: 更新=${totalUpdated}件, スキップ=${totalSkipped}件`);
+}
