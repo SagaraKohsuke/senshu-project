@@ -1005,6 +1005,7 @@
           
           // 自動更新関連
           autoUpdateInterval: null,
+          deadlineReloadTimer: null,
           
           // お問い合わせ関連
           isShowed: false,
@@ -1379,6 +1380,9 @@
             this.autoUpdateInterval = setInterval(() => {
               this.checkAndUpdateDeadlines();
             }, 60000); // 60秒ごと
+
+            // 締切時間（12:00）にページをリロードするタイマーをセット
+            this.scheduleDeadlineReload();
           },
           
           // 自動更新の停止
@@ -1387,6 +1391,41 @@
               clearInterval(this.autoUpdateInterval);
               this.autoUpdateInterval = null;
             }
+            if (this.deadlineReloadTimer) {
+              clearTimeout(this.deadlineReloadTimer);
+              this.deadlineReloadTimer = null;
+            }
+          },
+
+          // 締切時間（12:00）にページをリロードするタイマーをセット
+          scheduleDeadlineReload: function() {
+            if (this.deadlineReloadTimer) {
+              clearTimeout(this.deadlineReloadTimer);
+              this.deadlineReloadTimer = null;
+            }
+
+            const now = new Date();
+            const nextNoon = new Date(now);
+            nextNoon.setHours(12, 0, 0, 0);
+
+            // 今日の12:00を過ぎている場合は翌日の12:00を設定
+            if (now >= nextNoon) {
+              nextNoon.setDate(nextNoon.getDate() + 1);
+            }
+
+            const msUntilNoon = nextNoon - now;
+
+            // 安全チェック: 1ms〜24時間の範囲内であることを確認
+            const oneDayMs = 24 * 60 * 60 * 1000;
+            if (msUntilNoon <= 0 || msUntilNoon > oneDayMs) {
+              console.warn('締切リロードタイマーの計算値が範囲外です:', msUntilNoon);
+              return;
+            }
+
+            this.deadlineReloadTimer = setTimeout(() => {
+              alert('予約締め切り時間（12:00）になりました。ページをリロードします。');
+              window.location.reload();
+            }, msUntilNoon);
           },
           
           // 締切状況のチェックと更新
